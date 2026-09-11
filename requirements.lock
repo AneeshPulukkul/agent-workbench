@@ -18,7 +18,7 @@ langgraph==0.2.39
 opentelemetry-api==1.29.0
 opentelemetry-sdk==1.29.0
 opentelemetry-exporter-otlp==1.29.0
-opentelemetry-instrumentation-fastapi==0.48b0
+opentelemetry-instrumentation-fastapi==0.50b0
 httpx==0.28.1
 sse-starlette==2.2.1
 tenacity==8.5.0
