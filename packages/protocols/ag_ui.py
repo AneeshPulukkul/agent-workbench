@@ -75,7 +75,8 @@ def to_ag_ui(event: AgentEvent | dict[str, Any]) -> dict[str, Any] | None:
         "timestamp": d.get("timestamp"),
         "trace_id": d.get("trace_id"),
     }
-    data = d.get("data") if isinstance(d.get("data"), dict) else {}
+    raw_data = d.get("data")
+    data: dict[str, Any] = raw_data if isinstance(raw_data, dict) else {}
     if ag_type == "RUN_STARTED":
         base["data"] = {"run_id": d.get("run_id"), **data}
     elif ag_type == "TEXT_MESSAGE_CONTENT":

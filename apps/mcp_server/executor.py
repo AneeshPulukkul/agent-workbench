@@ -388,7 +388,10 @@ async def execute_tool(
                                 "conflict",
                                 "idempotency key already used with different input",
                             )
-                        result = dict(seen["result"])  # type: ignore[arg-type]
+                        cached_result = seen["result"]
+                        result: dict[str, Any] = (
+                            dict(cached_result) if isinstance(cached_result, dict) else {}
+                        )
                         result["deduplicated"] = True
                         _audit(sha256_hex(redact(result)))
                         log.info("mcp.tool.deduplicated", tool=tool_name, key=key)

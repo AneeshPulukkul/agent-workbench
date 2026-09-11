@@ -46,6 +46,7 @@ try:  # graceful when SDK not installed (REST + executor still work)
     from mcp.server.fastmcp import FastMCP
 
     fastmcp: FastMCP | None = FastMCP("agent-mcp-server")
+    assert fastmcp is not None  # narrowed: None only when SDK import fails
 
     def _req_auth() -> AuthContext:
         auth = _current_auth.get()

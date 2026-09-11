@@ -402,13 +402,13 @@ class SqlAlchemyRepository:
                     RunEvent.run_id == run_id
                 )
             ).scalar()
-            return int(mx) + 1
+            return (int(mx) if mx is not None else -1) + 1
 
     def _next_sequence_in(self, s: Session, run_id: str) -> int:
         mx = s.execute(
             select(func.coalesce(func.max(RunEvent.sequence), -1)).where(RunEvent.run_id == run_id)
         ).scalar()
-        return int(mx) + 1
+        return (int(mx) if mx is not None else -1) + 1
 
     def append_event(self, event: AgentEvent) -> AgentEvent:
         """Idempotent on event_id. Sequence conflict -> ConflictError."""

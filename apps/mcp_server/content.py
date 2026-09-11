@@ -88,7 +88,9 @@ def render_prompt(name: str, args: dict[str, str]) -> str:
     if spec is None:
         raise KeyError(f"unknown prompt {name}")
     template = str(spec["template"])
-    for key in spec["args"]:  # type: ignore[union-attr]
+    raw_args = spec["args"]
+    arg_names = [str(a) for a in raw_args] if isinstance(raw_args, list) else []
+    for key in arg_names:
         if key not in args and not (name == "prepare-change-review" and key == "risk"):
             raise ValueError(f"missing prompt arg: {key}")
     filled = template

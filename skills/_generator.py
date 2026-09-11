@@ -328,8 +328,10 @@ curl -s -X POST "$BASE/v1/runs/<run_id>/approvals/<approval_id>/decide" \\
 def render_skill_md(spec: dict[str, object], manifest: dict[str, str]) -> str:
     check_pins()
     name = str(spec["name"])
-    allowed = list(spec["allowed_tools"])  # type: ignore[arg-type]
-    outputs = list(spec["output_schemas"])  # type: ignore[arg-type]
+    raw_tools = spec["allowed_tools"]
+    raw_schemas = spec["output_schemas"]
+    allowed: list[str] = [str(t) for t in raw_tools] if isinstance(raw_tools, list) else []
+    outputs: list[str] = [str(s) for s in raw_schemas] if isinstance(raw_schemas, list) else []
     unknown = [t for t in allowed if t not in TOOL_METADATA]
     if unknown:
         raise SystemExit(f"skill {name}: unknown tools {unknown}")

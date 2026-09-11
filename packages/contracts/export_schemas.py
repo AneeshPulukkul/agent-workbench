@@ -13,6 +13,8 @@ import json
 import sys
 from pathlib import Path
 
+from pydantic import BaseModel
+
 if __package__ in (None, ""):
     # Direct script execution: `python packages/contracts/export_schemas.py`
     sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
@@ -62,7 +64,7 @@ else:  # `python -m packages.contracts.export_schemas`
         ToolMetadata,
     )
 
-MODELS = {
+MODELS: dict[str, type[BaseModel]] = {
     "AgentRequest": AgentRequest,
     "Run": Run,
     "RunBudget": RunBudget,
