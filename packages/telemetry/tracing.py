@@ -74,7 +74,7 @@ def init_tracing(
     exporter = None
     if in_memory:
         try:
-            from opentelemetry.sdk.trace.export import InMemorySpanExporter
+            from opentelemetry.sdk.trace.export import InMemorySpanExporter  # type: ignore[no-redef]
         except ImportError:
             from opentelemetry.sdk.trace.export.in_memory_span_exporter import (  # type: ignore[no-redef]
                 InMemorySpanExporter,
@@ -127,8 +127,8 @@ class _NoopSpan:
     def __enter__(self):  # type: ignore[no-untyped-def]
         return self
 
-    def __exit__(self, *a: Any) -> bool:
-        return False
+    def __exit__(self, *a: Any) -> None:
+        return None
 
     def set_attribute(self, *a: Any, **k: Any) -> None: ...
     def set_status(self, *a: Any, **k: Any) -> None: ...

@@ -389,13 +389,13 @@ async def execute_tool(
                                 "idempotency key already used with different input",
                             )
                         cached_result = seen["result"]
-                        result: dict[str, Any] = (
+                        cached: dict[str, Any] = (
                             dict(cached_result) if isinstance(cached_result, dict) else {}
                         )
-                        result["deduplicated"] = True
-                        _audit(sha256_hex(redact(result)))
+                        cached["deduplicated"] = True
+                        _audit(sha256_hex(redact(cached)))
                         log.info("mcp.tool.deduplicated", tool=tool_name, key=key)
-                        return result
+                        return cached
 
             timeout = timeout_override if timeout_override is not None else meta.timeout_seconds
             try:

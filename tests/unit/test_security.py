@@ -3,6 +3,8 @@ resource authZ, input limits, rate limits, redaction, headers (Prompt 11)."""
 
 from __future__ import annotations
 
+from collections.abc import Generator
+
 import base64
 import json
 
@@ -59,7 +61,7 @@ def _jwt_unsigned(payload: dict) -> str:
 
 
 @pytest.fixture(autouse=True)
-def _env(monkeypatch: pytest.MonkeyPatch) -> None:
+def _env(monkeypatch: pytest.MonkeyPatch) -> Generator[None, None, None]:
     monkeypatch.setenv("APP_ENV", "test")
     monkeypatch.setenv("AUTH_MODE", "mock")
     monkeypatch.setenv("MOCK_USER_ID", "analyst-local")

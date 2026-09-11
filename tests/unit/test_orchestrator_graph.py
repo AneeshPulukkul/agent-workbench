@@ -6,6 +6,9 @@ No network, no LLM, no sleeps.
 
 from __future__ import annotations
 
+import datetime
+from datetime import UTC
+
 import pytest
 
 from apps.orchestrator.graph import (
@@ -26,6 +29,8 @@ from apps.worker.worker import InMemoryRunQueue, RunJob
 
 
 def _state(run_id: str = "run_t1", **over) -> RunState:
+    from apps.orchestrator.state import BudgetLimits, BudgetUsage
+
     base = dict(
         run_id=run_id,
         tenant_id="tenant_a",
@@ -33,6 +38,31 @@ def _state(run_id: str = "run_t1", **over) -> RunState:
         context={"service": "checkout-api", "env": "dev"},
         trace_id="trace-1",
         correlation_id="corr-1",
+        status="created",
+        current_state="classify",
+        budget={},
+        limits=BudgetLimits(),
+        usage=BudgetUsage(),
+        started_at=datetime.now(UTC),
+        trace_id="trace-1",
+        correlation_id="corr-1",
+        classification={},
+        plan=[],
+        resources={},
+        mcp_evidence=[],
+        a2a_result=None,
+        a2a_fallback=False,
+        findings=[],
+        proposed_actions=[],
+        policy_decisions=[],
+        approvals=[],
+        unresolved=[],
+        outcome=None,
+        error=None,
+        conflict=None,
+        retried_reads=False,
+        event_sequence=0,
+        cancelled=False,
     )
     base.update(over)
     return RunState(**base)

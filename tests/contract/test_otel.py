@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from pathlib import Path
 
+# type: ignore[import-untyped]
 import yaml
 
 from packages.telemetry import tracing

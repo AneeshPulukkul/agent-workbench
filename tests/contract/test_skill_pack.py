@@ -28,7 +28,7 @@ def _frontmatter(text: str) -> dict[str, object]:
     assert text.startswith("---"), "SKILL.md must start with YAML frontmatter"
     end = text.index("---", 3)
     raw = text[3:end]
-    fm: dict[str, object] = {}
+    fm: dict[str, list[str] | str] = {}
     current_list_key: str | None = None
     for line in raw.splitlines():
         if re.match(r"^\s{2}-\s+", line) and current_list_key:

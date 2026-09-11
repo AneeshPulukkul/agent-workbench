@@ -33,7 +33,11 @@ NOW = datetime(2026, 9, 11, 12, 0, tzinfo=UTC)
 
 
 def _window():
-    return {"start": "2026-09-11T11:00:00Z", "end": "2026-09-11T12:00:00Z"}
+    from apps.a2a_agents.observability.agent import TimeWindow
+
+    return TimeWindow.model_validate(
+        {"start": "2026-09-11T11:00:00Z", "end": "2026-09-11T12:00:00Z"}
+    )
 
 
 def _req(task_id: str, **over):
@@ -87,7 +91,7 @@ def test_skill_io_versioned() -> None:
         assert f.evidence_refs and 0.0 <= f.confidence <= 1.0
     with pytest.raises(ValidationError):
         CorrelateInput(
-            service="checkout-api", window={"start": _window()["end"], "end": _window()["start"]}
+            service="checkout-api", window=_window()
         )
     with pytest.raises(ValidationError):
         CorrelateOutput(findings="not-a-list")  # type: ignore[arg-type]
