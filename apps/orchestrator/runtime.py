@@ -263,7 +263,7 @@ def retry_allowed_for_tool(category: str) -> bool:
 
 
 def _is_retryable(exc: BaseException) -> bool:
-    if isinstance(exc, (BudgetExceeded, ModelValidationError, asyncio.CancelledError)):
+    if isinstance(exc, BudgetExceeded | ModelValidationError | asyncio.CancelledError):
         return False
     if isinstance(exc, ModelError):
         return exc.retryable
@@ -279,7 +279,7 @@ def _is_retryable(exc: BaseException) -> bool:
         "ReadTimeout",
     }:
         return True
-    return bool(isinstance(exc, (TimeoutError, ConnectionError)))
+    return bool(isinstance(exc, TimeoutError | ConnectionError))
 
 
 def check_cancelled(cancellation: asyncio.Event | None) -> None:

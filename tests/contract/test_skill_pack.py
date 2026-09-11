@@ -70,9 +70,9 @@ def test_frontmatter_pins(skill: str) -> None:
     ):
         assert fm.get(key), f"{skill}: frontmatter missing {key}"
     assert fm["name"] == skill
-    assert str(fm["version"]) == CONTRACT_VERSION == TOOL_VERSION, (
-        f"{skill}: skill==contract==tool violated ({fm['version']} vs {CONTRACT_VERSION} vs {TOOL_VERSION})"
-    )
+    assert (
+        str(fm["version"]) == CONTRACT_VERSION == TOOL_VERSION
+    ), f"{skill}: skill==contract==tool violated ({fm['version']} vs {CONTRACT_VERSION} vs {TOOL_VERSION})"
     assert str(fm["contract_version"]) == SCHEMA_VERSION
 
 
@@ -85,9 +85,9 @@ def test_schema_refs_resolve(skill: str) -> None:
     for ref in refs:
         model = ref.split("@")[0].strip()
         assert model in manifest, f"{skill}: schema ref {ref} not in manifest.json"
-        assert (REPO_ROOT / "packages" / "contracts" / "schemas" / manifest[model]).exists(), (
-            f"{skill}: schema file missing for {ref}"
-        )
+        assert (
+            REPO_ROOT / "packages" / "contracts" / "schemas" / manifest[model]
+        ).exists(), f"{skill}: schema file missing for {ref}"
     body = _read(skill)
     assert "schema_version" in body and "ErrorEnvelope" in body
 
@@ -120,6 +120,6 @@ def test_generator_in_sync() -> None:
     for rel, content in rendered.items():
         p = REPO_ROOT / rel
         assert p.exists(), f"missing {rel}"
-        assert p.read_text(encoding="utf-8") == content, (
-            f"DRIFT: {rel} — regenerate with `python skills/_generator.py`"
-        )
+        assert (
+            p.read_text(encoding="utf-8") == content
+        ), f"DRIFT: {rel} — regenerate with `python skills/_generator.py`"

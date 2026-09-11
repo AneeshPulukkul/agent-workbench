@@ -98,7 +98,7 @@ def _redact_value(key_path: str, value: Any) -> Any:
         return {
             k: _redact_value(f"{key_path}.{k}" if key_path else str(k), v) for k, v in value.items()
         }
-    if isinstance(value, (list, tuple)):
+    if isinstance(value, list | tuple):
         return [_redact_value(key_path, v) for v in value]
     if isinstance(value, str):
         if key_path and _SENSITIVE_KEY_RE.search(key_path):
@@ -117,7 +117,7 @@ def default_redact(obj: Any) -> Any:
     """Deep-copy + redact. Never mutates the caller's object."""
     if isinstance(obj, dict):
         return {k: _redact_value(str(k), v) for k, v in obj.items()}
-    if isinstance(obj, (list, tuple)):
+    if isinstance(obj, list | tuple):
         return [_redact_value("", v) for v in obj]
     return _redact_value("", obj)
 
@@ -135,7 +135,7 @@ def _contains_bare_secret_marker(obj: Any) -> bool:
     def walk(o: Any, path: str = "") -> bool:
         if isinstance(o, dict):
             return any(walk(v, f"{path}.{k}") for k, v in o.items())
-        if isinstance(o, (list, tuple)):
+        if isinstance(o, list | tuple):
             return any(walk(v, path) for v in o)
         if isinstance(o, str) and path and _SENSITIVE_KEY_RE.search(path):
             return o != REDACTED
