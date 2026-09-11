@@ -1,0 +1,157 @@
+# Agent API resources: Deployment/Service/HPA/PDB/ServiceAccount/NetworkPolicy/ConfigMap.
+# Hardened: non-root, readOnlyRootFilesystem, dropped caps, probes, resources.
+# Fail-closed OIDC: when AUTH_MODE=oidc, oidcIssuerUrl/audience must be non-empty.
+{{- if eq .Values.env.AUTH_MODE "oidc" }}
+{{- $_ := required "config.oidcIssuerUrl is required when env.AUTH_MODE=oidc (fail-closed OIDC)" .Values.config.oidcIssuerUrl }}
+{{- $_ := required "config.oidcAudience is required when env.AUTH_MODE=oidc (fail-closed OIDC)" .Values.config.oidcAudience }}
+{{- end }}
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: {{ .Values.serviceAccount.name }}
+  labels: { app: agent-api }
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: agent-api-config
+  labels: { app: agent-api }
+data:
+  APP_ENV: {{ .Values.env.APP_ENV | quote }}
+  AUTH_MODE: {{ .Values.env.AUTH_MODE | quote }}
+  LLM_MODE: {{ .Values.env.LLM_MODE | quote }}
+  LOG_LEVEL: {{ .Values.env.LOG_LEVEL | quote }}
+  OTEL_EXPORTER_OTLP_ENDPOINT: {{ .Values.config.otelEndpoint | quote }}
+  OIDC_ISSUER_URL: {{ .Values.config.oidcIssuerUrl | quote }}
+  OIDC_AUDIENCE: {{ .Values.config.oidcAudience | quote }}
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: agent-api
+  labels: { app: agent-api }
+spec:
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels: { app: agent-api }
+  template:
+    metadata:
+      labels: { app: agent-api }
+    spec:
+      serviceAccountName: {{ .Values.serviceAccount.name }}
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 65532
+        runAsGroup: 65532
+        fsGroup: 65532
+        seccompProfile: { type: RuntimeDefault }
+      containers:
+        - name: api
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          ports:
+            - containerPort: {{ .Values.service.targetPort }}
+          envFrom:
+            - configMapRef: { name: agent-api-config }
+          env:
+            - name: DATABASE_URL
+              valueFrom:
+                secretKeyRef: { name: agent-api-secrets, key: database-url }
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            runAsNonRoot: true
+            runAsUser: 65532
+            capabilities: { drop: [ALL] }
+          livenessProbe:
+            httpGet: { path: {{ .Values.probes.livenessPath }}, port: {{ .Values.service.targetPort }} }
+            initialDelaySeconds: {{ .Values.probes.initialDelaySeconds }}
+            periodSeconds: {{ .Values.probes.periodSeconds }}
+          readinessProbe:
+            httpGet: { path: {{ .Values.probes.readinessPath }}, port: {{ .Values.service.targetPort }} }
+            initialDelaySeconds: {{ .Values.probes.initialDelaySeconds }}
+            periodSeconds: {{ .Values.probes.periodSeconds }}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: agent-api
+  labels: { app: agent-api }
+spec:
+  selector: { app: agent-api }
+  ports:
+    - port: {{ .Values.service.port }}
+      targetPort: {{ .Values.service.targetPort }}
+---
+{{- if .Values.autoscaling.enabled }}
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: agent-api
+spec:
+  scaleTargetRef: { apiVersion: apps/v1, kind: Deployment, name: agent-api }
+  minReplicas: {{ .Values.autoscaling.minReplicas }}
+  maxReplicas: {{ .Values.autoscaling.maxReplicas }}
+  metrics:
+    - type: Resource
+      resource: { name: cpu, target: { type: Utilization, averageUtilization: {{ .Values.autoscaling.targetCPUUtilizationPercentage }} } }
+    # Optional queue-depth / custom metrics (e.g. Prometheus workbench_queue_depth).
+    # Set autoscaling.customMetrics in values; CPU remains the floor signal.
+    {{- range .Values.autoscaling.customMetrics }}
+    - {{ . | toYaml | nindent 6 }}
+    {{- end }}
+{{- end }}
+---
+{{- if .Values.pdb.enabled }}
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: agent-api
+spec:
+  minAvailable: {{ .Values.pdb.minAvailable }}
+  selector:
+    matchLabels: { app: agent-api }
+{{- end }}
+---
+{{- if .Values.networkPolicy.enabled }}
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: agent-api
+spec:
+  podSelector:
+    matchLabels: { app: agent-api }
+  policyTypes: [Ingress, Egress]
+  ingress:
+    # Restricted: ingress-controller + in-namespace callers only (never open).
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              name: {{ .Values.networkPolicy.ingressNamespace | default "ingress-nginx" }}
+          podSelector:
+            matchLabels:
+              app.kubernetes.io/name: ingress-nginx
+        - podSelector:
+            matchLabels: { app: agent-ui }
+        {{- range .Values.networkPolicy.ingressFrom }}
+        - podSelector:
+            matchLabels: { app: {{ .from }} }
+        {{- end }}
+      ports:
+        - port: {{ .Values.service.targetPort }}
+  egress:
+    - to:
+        - namespaceSelector: { matchLabels: { name: kube-system } }
+      ports:
+        - port: 53
+          protocol: UDP
+    {{- range .Values.networkPolicy.egressTo }}
+    - to:
+        - podSelector:
+            matchLabels: { app: {{ .to }} }
+      ports:
+        - port: {{ .port }}
+    {{- end }}
+{{- end }}

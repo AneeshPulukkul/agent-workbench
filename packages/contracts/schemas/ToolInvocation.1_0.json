@@ -1,0 +1,198 @@
+{
+  "$defs": {
+    "AuthorizationDecision": {
+      "enum": [
+        "allowed",
+        "denied",
+        "requires_approval"
+      ],
+      "title": "AuthorizationDecision",
+      "type": "string"
+    },
+    "ToolInvocationStatus": {
+      "enum": [
+        "pending",
+        "running",
+        "succeeded",
+        "failed",
+        "denied",
+        "timeout",
+        "cancelled"
+      ],
+      "title": "ToolInvocationStatus",
+      "type": "string"
+    }
+  },
+  "additionalProperties": false,
+  "description": "Audit row for one tool call (tool_invocations table). Hashes + redacted only.",
+  "properties": {
+    "schema_version": {
+      "const": "1.0",
+      "default": "1.0",
+      "title": "Schema Version",
+      "type": "string"
+    },
+    "invocation_id": {
+      "maxLength": 128,
+      "minLength": 1,
+      "pattern": "^[A-Za-z0-9._-]+$",
+      "title": "Invocation Id",
+      "type": "string"
+    },
+    "run_id": {
+      "maxLength": 128,
+      "minLength": 1,
+      "pattern": "^[A-Za-z0-9._-]+$",
+      "title": "Run Id",
+      "type": "string"
+    },
+    "tenant_id": {
+      "maxLength": 128,
+      "minLength": 1,
+      "pattern": "^[A-Za-z0-9._-]+$",
+      "title": "Tenant Id",
+      "type": "string"
+    },
+    "tool_name": {
+      "maxLength": 128,
+      "minLength": 1,
+      "pattern": "^[a-z0-9_]+\\.[a-z0-9_]+$",
+      "title": "Tool Name",
+      "type": "string"
+    },
+    "tool_version": {
+      "maxLength": 32,
+      "minLength": 1,
+      "pattern": "^\\d+\\.\\d+\\.\\d+$",
+      "title": "Tool Version",
+      "type": "string"
+    },
+    "input_hash": {
+      "maxLength": 256,
+      "minLength": 1,
+      "title": "Input Hash",
+      "type": "string"
+    },
+    "redacted_input": {
+      "additionalProperties": true,
+      "title": "Redacted Input",
+      "type": "object"
+    },
+    "output_hash": {
+      "anyOf": [
+        {
+          "maxLength": 256,
+          "minLength": 1,
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Output Hash"
+    },
+    "status": {
+      "$ref": "#/$defs/ToolInvocationStatus"
+    },
+    "authorization_decision": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/AuthorizationDecision"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null
+    },
+    "idempotency_key": {
+      "anyOf": [
+        {
+          "maxLength": 128,
+          "minLength": 1,
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Idempotency Key"
+    },
+    "dry_run": {
+      "default": false,
+      "title": "Dry Run",
+      "type": "boolean"
+    },
+    "started_at": {
+      "format": "date-time",
+      "title": "Started At",
+      "type": "string"
+    },
+    "completed_at": {
+      "anyOf": [
+        {
+          "format": "date-time",
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Completed At"
+    },
+    "trace_id": {
+      "anyOf": [
+        {
+          "maxLength": 128,
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Trace Id"
+    },
+    "correlation_id": {
+      "anyOf": [
+        {
+          "maxLength": 128,
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Correlation Id"
+    },
+    "error": {
+      "anyOf": [
+        {
+          "additionalProperties": true,
+          "type": "object"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Error"
+    }
+  },
+  "required": [
+    "invocation_id",
+    "run_id",
+    "tenant_id",
+    "tool_name",
+    "tool_version",
+    "input_hash",
+    "status",
+    "started_at"
+  ],
+  "title": "ToolInvocation",
+  "type": "object"
+}

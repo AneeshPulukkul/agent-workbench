@@ -1,0 +1,64 @@
+groups:
+  - name: workbench-slo
+    interval: 30s
+    rules:
+      - alert: HighRunLatencyP95
+        expr: histogram_quantile(0.95, sum(rate(workbench_run_duration_bucket[10m])) by (le)) > 120
+        for: 10m
+        labels:
+          severity: warning
+        annotations:
+          summary: "p95 run latency above 120s"
+      - alert: ToolFailureSpike
+        expr: sum(rate(workbench_tool_calls_total{status="failed"}[5m])) / sum(rate(workbench_tool_calls_total[5m])) > 0.2
+        for: 5m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Tool failure rate above 20% (5m)"
+      - alert: ApprovalWaitAging
+        expr: histogram_quantile(0.95, sum(rate(workbench_approval_wait_bucket[15m])) by (le)) > 1800
+        for: 15m
+        labels:
+          severity: warning
+        annotations:
+          summary: "p95 approval wait above 30m"
+      - alert: CostBurnRate
+        expr: sum(rate(workbench_model_cost_usd_total[1h])) > 5
+        for: 15m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Model cost burn above $5/h"
+      - alert: BudgetExhaustionSpike
+        expr: sum(rate(workbench_budget_exhausted_total[15m])) > 0.05
+        for: 10m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Budget exhaustion rate elevated"
+          runbook: "docs/operations/runbooks.md#rb-6-cost-burn-above-5h"
+      - alert: APIDown
+        expr: avg_over_time(probe_success{job="agent-api"}[5m]) < 0.995
+        for: 5m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Agent API availability below SLO 99.5%"
+          runbook: "docs/operations/runbooks.md#rb-1-api-down--readiness-failing"
+      - alert: AuthFailureSpike
+        expr: sum(rate(workbench_http_errors_total{code=~"unauthorized|forbidden"}[5m])) > 0.5
+        for: 10m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Auth failure spike (possible misconfig or probing)"
+          runbook: "docs/operations/runbooks.md#rb-7-suspected-prompt-injection--dangerous-recommendation"
+      - alert: RateLimitHammering
+        expr: sum(rate(workbench_rate_limited_total[5m])) > 1
+        for: 10m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Sustained rate-limit hits (possible abuse or runaway client)"
+          runbook: "docs/operations/runbooks.md#rb-2-tool-failure-spike-20-5m"

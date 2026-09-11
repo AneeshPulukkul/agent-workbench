@@ -1,0 +1,182 @@
+{
+  "$defs": {
+    "RunBudget": {
+      "additionalProperties": false,
+      "description": "Explicit budget block persisted on the run (runs.budget_json).",
+      "properties": {
+        "schema_version": {
+          "const": "1.0",
+          "default": "1.0",
+          "title": "Schema Version",
+          "type": "string"
+        },
+        "max_tool_calls": {
+          "maximum": 100,
+          "minimum": 1,
+          "title": "Max Tool Calls",
+          "type": "integer"
+        },
+        "max_model_calls": {
+          "maximum": 50,
+          "minimum": 1,
+          "title": "Max Model Calls",
+          "type": "integer"
+        },
+        "max_cost_usd": {
+          "maximum": 1000.0,
+          "minimum": 0.0,
+          "title": "Max Cost Usd",
+          "type": "number"
+        },
+        "consumed_tool_calls": {
+          "default": 0,
+          "minimum": 0,
+          "title": "Consumed Tool Calls",
+          "type": "integer"
+        },
+        "consumed_model_calls": {
+          "default": 0,
+          "minimum": 0,
+          "title": "Consumed Model Calls",
+          "type": "integer"
+        },
+        "consumed_cost_usd": {
+          "default": 0.0,
+          "minimum": 0.0,
+          "title": "Consumed Cost Usd",
+          "type": "number"
+        }
+      },
+      "required": [
+        "max_tool_calls",
+        "max_model_calls",
+        "max_cost_usd"
+      ],
+      "title": "RunBudget",
+      "type": "object"
+    },
+    "RunStatus": {
+      "description": "Canonical run lifecycle (domain-model.md).",
+      "enum": [
+        "created",
+        "running",
+        "waiting_for_approval",
+        "completed",
+        "failed",
+        "cancelled"
+      ],
+      "title": "RunStatus",
+      "type": "string"
+    }
+  },
+  "additionalProperties": false,
+  "description": "Durable run row (runs table). State persisted after every transition.",
+  "properties": {
+    "schema_version": {
+      "const": "1.0",
+      "default": "1.0",
+      "title": "Schema Version",
+      "type": "string"
+    },
+    "run_id": {
+      "maxLength": 128,
+      "minLength": 1,
+      "pattern": "^[A-Za-z0-9._-]+$",
+      "title": "Run Id",
+      "type": "string"
+    },
+    "tenant_id": {
+      "maxLength": 128,
+      "minLength": 1,
+      "pattern": "^[A-Za-z0-9._-]+$",
+      "title": "Tenant Id",
+      "type": "string"
+    },
+    "created_by": {
+      "maxLength": 256,
+      "minLength": 1,
+      "title": "Created By",
+      "type": "string"
+    },
+    "objective": {
+      "maxLength": 8192,
+      "minLength": 1,
+      "title": "Objective",
+      "type": "string"
+    },
+    "status": {
+      "$ref": "#/$defs/RunStatus",
+      "default": "created"
+    },
+    "current_state": {
+      "default": "created",
+      "maxLength": 128,
+      "minLength": 1,
+      "title": "Current State",
+      "type": "string"
+    },
+    "budget": {
+      "$ref": "#/$defs/RunBudget"
+    },
+    "created_at": {
+      "format": "date-time",
+      "title": "Created At",
+      "type": "string"
+    },
+    "updated_at": {
+      "format": "date-time",
+      "title": "Updated At",
+      "type": "string"
+    },
+    "completed_at": {
+      "anyOf": [
+        {
+          "format": "date-time",
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Completed At"
+    },
+    "trace_id": {
+      "anyOf": [
+        {
+          "maxLength": 128,
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Trace Id"
+    },
+    "correlation_id": {
+      "anyOf": [
+        {
+          "maxLength": 128,
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Correlation Id"
+    }
+  },
+  "required": [
+    "run_id",
+    "tenant_id",
+    "created_by",
+    "objective",
+    "budget",
+    "created_at",
+    "updated_at"
+  ],
+  "title": "Run",
+  "type": "object"
+}

@@ -1,0 +1,54 @@
+name: ci
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  python:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+      - name: Install Python deps
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -r requirements.lock
+          python -m pip install -e ".[dev]"
+      - name: Lint (ruff + mypy)
+        run: |
+          python -m ruff check .
+          python -m ruff format --check .
+          python -m mypy apps/api packages tests/unit tests/contract
+      - name: Fast suite (unit + contract, no services)
+        run: python -m pytest tests/unit tests/contract -q
+      - name: Full suite (~187 tests)
+        run: python -m pytest tests -q
+      - name: Skill-pack parity gate
+        run: |
+          python skills/_generator.py --check
+          python -m pytest tests/contract/test_parity.py -q
+      - name: Supply-chain note (pip-audit, non-blocking)
+        continue-on-error: true
+        run: |
+          python -m pip install pip-audit
+          python -m pip_audit -r requirements.lock || echo "pip-audit reported findings (non-blocking; see log)"
+
+  web:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: npm
+      - name: Install
+        run: npm install
+      - name: Build
+        run: npm run build
+      - name: Test
+        run: npm --workspace ui/web run test

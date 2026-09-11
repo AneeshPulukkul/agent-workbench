@@ -1,0 +1,44 @@
+{
+  "title": "Workbench — Security",
+  "uid": "workbench-security",
+  "schemaVersion": 39,
+  "version": 1,
+  "tags": ["workbench", "security"],
+  "panels": [
+    {
+      "id": 1,
+      "title": "Auth failures (401/403) by route",
+      "type": "timeseries",
+      "datasource": "Prometheus",
+      "targets": [{ "expr": "sum by (route, code) (rate(workbench_http_errors_total{code=~\"unauthorized|forbidden|not_found\"}[5m]))", "legendFormat": "{{route}} {{code}}" }]
+    },
+    {
+      "id": 2,
+      "title": "Tenant isolation denials (404-for-isolation)",
+      "type": "stat",
+      "datasource": "Prometheus",
+      "targets": [{ "expr": "sum(workbench_tenant_denials_total)", "legendFormat": "denials" }]
+    },
+    {
+      "id": 3,
+      "title": "Policy decisions by decision",
+      "type": "timeseries",
+      "datasource": "Prometheus",
+      "targets": [{ "expr": "sum by (decision) (rate(workbench_policy_decisions_total[5m]))", "legendFormat": "{{decision}}" }]
+    },
+    {
+      "id": 4,
+      "title": "Rate-limit hits (429)",
+      "type": "timeseries",
+      "datasource": "Prometheus",
+      "targets": [{ "expr": "sum by (tenant) (rate(workbench_rate_limited_total[5m]))", "legendFormat": "{{tenant}}" }]
+    },
+    {
+      "id": 5,
+      "title": "Redacted audit writes",
+      "type": "stat",
+      "datasource": "Prometheus",
+      "targets": [{ "expr": "sum(workbench_audit_redacted_total)", "legendFormat": "redacted" }]
+    }
+  ]
+}

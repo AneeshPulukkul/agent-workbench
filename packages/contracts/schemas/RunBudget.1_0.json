@@ -1,0 +1,55 @@
+{
+  "additionalProperties": false,
+  "description": "Explicit budget block persisted on the run (runs.budget_json).",
+  "properties": {
+    "schema_version": {
+      "const": "1.0",
+      "default": "1.0",
+      "title": "Schema Version",
+      "type": "string"
+    },
+    "max_tool_calls": {
+      "maximum": 100,
+      "minimum": 1,
+      "title": "Max Tool Calls",
+      "type": "integer"
+    },
+    "max_model_calls": {
+      "maximum": 50,
+      "minimum": 1,
+      "title": "Max Model Calls",
+      "type": "integer"
+    },
+    "max_cost_usd": {
+      "maximum": 1000.0,
+      "minimum": 0.0,
+      "title": "Max Cost Usd",
+      "type": "number"
+    },
+    "consumed_tool_calls": {
+      "default": 0,
+      "minimum": 0,
+      "title": "Consumed Tool Calls",
+      "type": "integer"
+    },
+    "consumed_model_calls": {
+      "default": 0,
+      "minimum": 0,
+      "title": "Consumed Model Calls",
+      "type": "integer"
+    },
+    "consumed_cost_usd": {
+      "default": 0.0,
+      "minimum": 0.0,
+      "title": "Consumed Cost Usd",
+      "type": "number"
+    }
+  },
+  "required": [
+    "max_tool_calls",
+    "max_model_calls",
+    "max_cost_usd"
+  ],
+  "title": "RunBudget",
+  "type": "object"
+}

@@ -1,0 +1,117 @@
+{
+  "$defs": {
+    "EventType": {
+      "enum": [
+        "run.started",
+        "message.delta",
+        "tool.started",
+        "tool.completed",
+        "agent.delegated",
+        "finding.created",
+        "approval.required",
+        "approval.received",
+        "run.completed",
+        "run.failed",
+        "run.cancelled"
+      ],
+      "title": "EventType",
+      "type": "string"
+    }
+  },
+  "additionalProperties": false,
+  "description": "Persist-then-publish. (run_id, sequence) is unique; sequence orders replay.",
+  "properties": {
+    "schema_version": {
+      "const": "1.0",
+      "default": "1.0",
+      "title": "Schema Version",
+      "type": "string"
+    },
+    "event_id": {
+      "maxLength": 128,
+      "minLength": 1,
+      "pattern": "^[A-Za-z0-9._-]+$",
+      "title": "Event Id",
+      "type": "string"
+    },
+    "run_id": {
+      "maxLength": 128,
+      "minLength": 1,
+      "pattern": "^[A-Za-z0-9._-]+$",
+      "title": "Run Id",
+      "type": "string"
+    },
+    "tenant_id": {
+      "maxLength": 128,
+      "minLength": 1,
+      "pattern": "^[A-Za-z0-9._-]+$",
+      "title": "Tenant Id",
+      "type": "string"
+    },
+    "sequence": {
+      "maximum": 1000000,
+      "minimum": 0,
+      "title": "Sequence",
+      "type": "integer"
+    },
+    "type": {
+      "$ref": "#/$defs/EventType"
+    },
+    "timestamp": {
+      "format": "date-time",
+      "title": "Timestamp",
+      "type": "string"
+    },
+    "data": {
+      "additionalProperties": true,
+      "title": "Data",
+      "type": "object"
+    },
+    "trace_id": {
+      "anyOf": [
+        {
+          "maxLength": 128,
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Trace Id"
+    },
+    "correlation_id": {
+      "anyOf": [
+        {
+          "maxLength": 128,
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Correlation Id"
+    },
+    "sensitive": {
+      "default": false,
+      "title": "Sensitive",
+      "type": "boolean"
+    },
+    "safe_for_ui": {
+      "default": false,
+      "title": "Safe For Ui",
+      "type": "boolean"
+    }
+  },
+  "required": [
+    "event_id",
+    "run_id",
+    "tenant_id",
+    "sequence",
+    "type",
+    "timestamp"
+  ],
+  "title": "AgentEvent",
+  "type": "object"
+}

@@ -1,0 +1,6 @@
+apiVersion: v2
+name: agent-a2a
+description: A2A specialist agents (observability/knowledge/change-risk/remediation)
+type: application
+version: 0.1.0
+appVersion: "0.1.0"

@@ -1,0 +1,106 @@
+{
+  "$defs": {
+    "SideEffect": {
+      "enum": [
+        "none",
+        "external_write",
+        "destructive"
+      ],
+      "title": "SideEffect",
+      "type": "string"
+    },
+    "ToolCategory": {
+      "enum": [
+        "read",
+        "analysis",
+        "write",
+        "destructive"
+      ],
+      "title": "ToolCategory",
+      "type": "string"
+    }
+  },
+  "additionalProperties": false,
+  "description": "Published per tool beyond its JSON Schema. Pinned by skill==contract==tool.",
+  "properties": {
+    "schema_version": {
+      "const": "1.0",
+      "default": "1.0",
+      "title": "Schema Version",
+      "type": "string"
+    },
+    "name": {
+      "description": "Namespaced tool name, e.g. telemetry.query_metrics.",
+      "maxLength": 128,
+      "minLength": 1,
+      "pattern": "^[a-z0-9_]+\\.[a-z0-9_]+$",
+      "title": "Name",
+      "type": "string"
+    },
+    "description": {
+      "maxLength": 2000,
+      "minLength": 1,
+      "title": "Description",
+      "type": "string"
+    },
+    "category": {
+      "$ref": "#/$defs/ToolCategory"
+    },
+    "side_effect": {
+      "$ref": "#/$defs/SideEffect"
+    },
+    "idempotent": {
+      "title": "Idempotent",
+      "type": "boolean"
+    },
+    "timeout_seconds": {
+      "maximum": 600,
+      "minimum": 1,
+      "title": "Timeout Seconds",
+      "type": "integer"
+    },
+    "required_scopes": {
+      "items": {
+        "type": "string"
+      },
+      "maxItems": 16,
+      "title": "Required Scopes",
+      "type": "array"
+    },
+    "approval_required": {
+      "title": "Approval Required",
+      "type": "boolean"
+    },
+    "supports_dry_run": {
+      "title": "Supports Dry Run",
+      "type": "boolean"
+    },
+    "owner": {
+      "maxLength": 128,
+      "minLength": 1,
+      "title": "Owner",
+      "type": "string"
+    },
+    "version": {
+      "maxLength": 32,
+      "minLength": 1,
+      "pattern": "^\\d+\\.\\d+\\.\\d+$",
+      "title": "Version",
+      "type": "string"
+    }
+  },
+  "required": [
+    "name",
+    "description",
+    "category",
+    "side_effect",
+    "idempotent",
+    "timeout_seconds",
+    "approval_required",
+    "supports_dry_run",
+    "owner",
+    "version"
+  ],
+  "title": "ToolMetadata",
+  "type": "object"
+}

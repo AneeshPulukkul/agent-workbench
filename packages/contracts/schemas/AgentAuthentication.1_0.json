@@ -1,0 +1,25 @@
+{
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": {
+      "const": "1.0",
+      "default": "1.0",
+      "title": "Schema Version",
+      "type": "string"
+    },
+    "schemes": {
+      "items": {
+        "type": "string"
+      },
+      "maxItems": 8,
+      "minItems": 1,
+      "title": "Schemes",
+      "type": "array"
+    }
+  },
+  "required": [
+    "schemes"
+  ],
+  "title": "AgentAuthentication",
+  "type": "object"
+}

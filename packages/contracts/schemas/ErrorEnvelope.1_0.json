@@ -1,0 +1,124 @@
+{
+  "$defs": {
+    "ErrorCode": {
+      "enum": [
+        "validation_error",
+        "auth_error",
+        "forbidden",
+        "not_found",
+        "conflict",
+        "rate_limited",
+        "timeout",
+        "model_error",
+        "tool_error",
+        "a2a_error",
+        "policy_denied",
+        "approval_required",
+        "approval_expired",
+        "budget_exceeded",
+        "cancelled",
+        "internal_error",
+        "unavailable"
+      ],
+      "title": "ErrorCode",
+      "type": "string"
+    }
+  },
+  "additionalProperties": false,
+  "description": "Safe message (no secrets); redacted details only.",
+  "properties": {
+    "schema_version": {
+      "const": "1.0",
+      "default": "1.0",
+      "title": "Schema Version",
+      "type": "string"
+    },
+    "code": {
+      "$ref": "#/$defs/ErrorCode"
+    },
+    "message": {
+      "maxLength": 2000,
+      "minLength": 1,
+      "title": "Message",
+      "type": "string"
+    },
+    "run_id": {
+      "anyOf": [
+        {
+          "maxLength": 128,
+          "minLength": 1,
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Run Id"
+    },
+    "tenant_id": {
+      "anyOf": [
+        {
+          "maxLength": 128,
+          "minLength": 1,
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Tenant Id"
+    },
+    "retryable": {
+      "default": false,
+      "title": "Retryable",
+      "type": "boolean"
+    },
+    "details": {
+      "anyOf": [
+        {
+          "additionalProperties": true,
+          "type": "object"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Details"
+    },
+    "trace_id": {
+      "anyOf": [
+        {
+          "maxLength": 128,
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Trace Id"
+    },
+    "correlation_id": {
+      "anyOf": [
+        {
+          "maxLength": 128,
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Correlation Id"
+    }
+  },
+  "required": [
+    "code",
+    "message"
+  ],
+  "title": "ErrorEnvelope",
+  "type": "object"
+}

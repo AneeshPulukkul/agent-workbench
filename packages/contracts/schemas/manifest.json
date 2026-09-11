@@ -1,0 +1,25 @@
+{
+  "schema_version": "1.0",
+  "models": {
+    "A2ATaskError": "A2ATaskError.1_0.json",
+    "A2ATaskRequest": "A2ATaskRequest.1_0.json",
+    "A2ATaskResult": "A2ATaskResult.1_0.json",
+    "AgentAuthentication": "AgentAuthentication.1_0.json",
+    "AgentCard": "AgentCard.1_0.json",
+    "AgentEvent": "AgentEvent.1_0.json",
+    "AgentRequest": "AgentRequest.1_0.json",
+    "AgentResult": "AgentResult.1_0.json",
+    "AgentSkill": "AgentSkill.1_0.json",
+    "Approval": "Approval.1_0.json",
+    "ApprovalDecisionRequest": "ApprovalDecisionRequest.1_0.json",
+    "ErrorEnvelope": "ErrorEnvelope.1_0.json",
+    "EvidenceReference": "EvidenceReference.1_0.json",
+    "Finding": "Finding.1_0.json",
+    "PolicyDecision": "PolicyDecision.1_0.json",
+    "ProposedAction": "ProposedAction.1_0.json",
+    "Run": "Run.1_0.json",
+    "RunBudget": "RunBudget.1_0.json",
+    "ToolInvocation": "ToolInvocation.1_0.json",
+    "ToolMetadata": "ToolMetadata.1_0.json"
+  }
+}

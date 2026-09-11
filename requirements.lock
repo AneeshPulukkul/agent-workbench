@@ -1,0 +1,32 @@
+# requirements.lock — pinned, hash-free bootstrap lock (local/dev).
+# Strategy: pip-tools. Edit requirements.in, then run:
+#   pip-compile --generate-hashes --output-file=requirements.lock requirements.in
+# Install: pip install -r requirements.lock
+# Regenerate on dependency change; commit the lockfile. CI installs with --require-hashes
+# once hashes are generated via pip-compile on a Linux py3.12 runner.
+#
+# Pinned 2026-09-11 for Python 3.12 (compatible with 3.12/3.13 local). Refresh via pip-compile.
+fastapi==0.115.12
+uvicorn==0.34.0
+sqlalchemy==2.0.36
+alembic==1.14.1
+psycopg==3.2.3
+pydantic==2.10.6
+pydantic-settings==2.7.1
+litellm==1.61.0
+langgraph==0.2.39
+opentelemetry-api==1.29.0
+opentelemetry-sdk==1.29.0
+opentelemetry-exporter-otlp==1.29.0
+opentelemetry-instrumentation-fastapi==0.48b0
+httpx==0.28.1
+sse-starlette==2.2.1
+tenacity==9.0.2
+structlog==24.4.0
+# dev/test
+pytest==8.3.4
+pytest-asyncio==0.25.0
+ruff==0.8.4
+mypy==1.14.1
+pre-commit==3.8.0
+pip-tools==7.4.1

@@ -1,0 +1,58 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="820" viewBox="0 0 1200 820" font-family="Inter, ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, Arial, sans-serif" role="img" aria-label="Agent Operations Workbench UI overview, dark theme">
+<title>AO Workbench — dark shell overview</title>
+<desc>Same shell as light, dark vars: bg #0b1220, surface #131d33, border #243150, text #e8edf7.</desc>
+<defs>
+<linearGradient id="markd" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#60a5fa"/><stop offset="1" stop-color="#7c3aed"/></linearGradient>
+</defs>
+<rect width="1200" height="820" fill="#0b1220"/>
+<rect x="24" y="16" width="1152" height="86" rx="14" fill="#131d33" stroke="#243150"/>
+<rect x="44" y="36" width="38" height="38" rx="10" fill="url(#markd)"/>
+<text x="63" y="61" text-anchor="middle" font-size="14" font-weight="800" fill="#0b1220">AO</text>
+<text x="94" y="53" font-size="17" font-weight="700" fill="#e8edf7">Agent Operations Workbench</text>
+<text x="94" y="71" font-size="12" font-weight="500" fill="#94a3b8">Investigate &#183; Approve &#183; Delegate</text>
+<rect x="760" y="42" width="92" height="28" rx="999" fill="#22c55e" fill-opacity="0.16" stroke="#4ade80"/><text x="806" y="61" text-anchor="middle" font-size="12" font-weight="700" fill="#4ade80">created</text>
+<g><rect x="862" y="42" width="150" height="28" rx="999" fill="#0f1830" stroke="#243150"/><circle cx="880" cy="56" r="4" fill="#22c55e"/><text x="892" y="61" font-size="12" font-weight="600" fill="#94a3b8">stream: open</text></g>
+<rect x="1022" y="42" width="64" height="28" rx="999" fill="#0f1830" stroke="#243150"/><text x="1054" y="61" text-anchor="middle" font-size="12" font-weight="600" fill="#94a3b8">seq: 42</text>
+<g><rect x="1096" y="42" width="60" height="28" rx="6" fill="#131d33" stroke="#334155"/><text x="1126" y="61" text-anchor="middle" font-size="11" font-weight="600" fill="#94a3b8">Dark &#9662;</text><text x="1096" y="36" font-size="10" fill="#94a3b8">Theme</text></g>
+<rect x="24" y="118" width="320" height="300" rx="10" fill="#131d33" stroke="#243150"/>
+<text x="44" y="146" font-size="15" font-weight="700" fill="#e8edf7">New case</text>
+<text x="44" y="170" font-size="11" font-weight="600" fill="#e8edf7">Case title</text>
+<rect x="44" y="176" width="280" height="28" rx="6" fill="#131d33" stroke="#334155"/><text x="52" y="194" font-size="11" fill="#e8edf7">Checkout error-rate spike</text>
+<text x="44" y="222" font-size="11" font-weight="600" fill="#e8edf7">Service</text>
+<rect x="44" y="228" width="280" height="28" rx="6" fill="#131d33" stroke="#334155"/><text x="52" y="246" font-size="11" fill="#e8edf7">checkout-api</text>
+<text x="44" y="274" font-size="11" font-weight="600" fill="#e8edf7">Objective</text>
+<rect x="44" y="280" width="280" height="52" rx="6" fill="#131d33" stroke="#334155"/><text x="52" y="298" font-size="11" fill="#e8edf7">Investigate elevated checkout</text><text x="52" y="312" font-size="11" fill="#e8edf7">API error rate</text>
+<rect x="44" y="344" width="280" height="36" rx="6" fill="#60a5fa"/><text x="184" y="367" text-anchor="middle" font-size="13" font-weight="700" fill="#0b1220">Create run</text>
+<rect x="24" y="430" width="320" height="150" rx="10" fill="#131d33" stroke="#243150"/>
+<text x="44" y="458" font-size="15" font-weight="700" fill="#e8edf7">Run state</text>
+<text x="44" y="482" font-size="12" fill="#e8edf7">14 UI-safe events (seq 42)</text>
+<text x="44" y="502" font-size="11" fill="#94a3b8">Stream closes on RUN_FINISHED /</text>
+<text x="44" y="516" font-size="11" fill="#94a3b8">RUN_ERROR / RUN_CANCELLED;</text>
+<text x="44" y="530" font-size="11" fill="#94a3b8">replay via ?after_sequence=</text>
+<rect x="44" y="540" width="110" height="24" rx="999" fill="#1e2a4d" stroke="#243150"/><text x="99" y="556" text-anchor="middle" font-size="10" font-weight="600" fill="#c7d2fe">Last-Event-ID</text>
+<rect x="360" y="118" width="816" height="104" rx="10" fill="#131d33" stroke="#243150"/>
+<text x="380" y="146" font-size="15" font-weight="700" fill="#e8edf7">Assistant</text>
+<rect x="380" y="156" width="776" height="46" rx="6" fill="#0f1830" stroke="#243150"/><text x="392" y="184" font-size="12" fill="#e8edf7">Error budget burn: p99 latency 1.8s on /checkout (telemetry.query_metrics)&#8230;</text>
+<rect x="360" y="232" width="816" height="178" rx="10" fill="#f59e0b" fill-opacity="0.16" stroke="#fbbf24" stroke-width="2"/>
+<text x="380" y="260" font-size="15" font-weight="700" fill="#e8edf7">Proposed action &#8212; approval required</text>
+<rect x="380" y="270" width="776" height="120" rx="6" fill="#0f1830" stroke="#243150"/>
+<text x="392" y="294" font-size="12" fill="#e8edf7"><tspan font-family="ui-monospace, Menlo, Consolas, monospace">deployment.rollback</tspan><tspan fill="#94a3b8"> &#183; risk: high &#183; dry-run</tspan></text>
+<text x="392" y="312" font-size="12" fill="#e8edf7">Reason: rollback checkout-api to v2.14.3</text>
+<text x="392" y="330" font-size="12" fill="#94a3b8">Rollback: re-deploy v2.14.4 &#183; appr_9f3c</text>
+<rect x="392" y="342" width="90" height="30" rx="6" fill="#15803d"/><text x="437" y="361" text-anchor="middle" font-size="12" font-weight="700" fill="#ffffff">Approve</text>
+<rect x="490" y="342" width="90" height="30" rx="6" fill="none" stroke="#f87171"/><text x="535" y="361" text-anchor="middle" font-size="12" font-weight="700" fill="#f87171">Reject</text>
+<rect x="360" y="420" width="816" height="120" rx="10" fill="#131d33" stroke="#243150"/>
+<text x="380" y="448" font-size="15" font-weight="700" fill="#e8edf7">Tool timeline</text>
+<circle cx="392" cy="470" r="4.5" fill="#60a5fa"/><text x="404" y="474" font-size="12" fill="#e8edf7"><tspan font-family="ui-monospace, Menlo, monospace">telemetry.query_metrics</tspan><tspan fill="#94a3b8"> &#8212; TOOL_CALL_FINISH (ok &#183; 1.2s)</tspan></text>
+<circle cx="392" cy="496" r="4.5" fill="#60a5fa"/><text x="404" y="500" font-size="12" fill="#e8edf7"><tspan font-family="ui-monospace, Menlo, monospace">knowledge.search</tspan><tspan fill="#94a3b8"> &#8212; TOOL_CALL_FINISH (ok &#183; 0.4s)</tspan></text>
+<line x1="392" y1="474" x2="392" y2="492" stroke="#334155"/>
+<rect x="360" y="550" width="816" height="104" rx="10" fill="#131d33" stroke="#243150"/>
+<text x="380" y="578" font-size="15" font-weight="700" fill="#e8edf7">Delegation (A2A)</text>
+<circle cx="392" cy="600" r="4.5" fill="#60a5fa"/><text x="404" y="604" font-size="12" fill="#e8edf7">observability-agent &#183; diagnose accepted <tspan fill="#94a3b8">&#183; seq 31</tspan></text>
+<line x1="392" y1="604" x2="392" y2="620" stroke="#334155"/><circle cx="392" cy="624" r="4.5" fill="#60a5fa"/><text x="404" y="628" font-size="12" fill="#e8edf7">report received &#183; confidence 0.82</text>
+<rect x="360" y="664" width="816" height="120" rx="10" fill="#131d33" stroke="#243150"/>
+<text x="380" y="692" font-size="15" font-weight="700" fill="#e8edf7">Findings</text>
+<rect x="380" y="700" width="376" height="64" rx="6" fill="#0f1830" stroke="#243150"/><text x="392" y="722" font-size="12" font-weight="600" fill="#e8edf7">Saturated connection pool</text><rect x="392" y="730" width="200" height="6" rx="999" fill="#111a2e" stroke="#243150"/><rect x="392" y="730" width="164" height="6" rx="999" fill="#60a5fa"/><text x="392" y="752" font-size="10" fill="#94a3b8">confidence 0.82</text>
+<rect x="764" y="700" width="392" height="64" rx="6" fill="#0f1830" stroke="#243150"/><text x="776" y="722" font-size="12" font-weight="600" fill="#e8edf7">Bad deploy v2.14.4 (87% errors)</text><rect x="776" y="730" width="200" height="6" rx="999" fill="#111a2e" stroke="#243150"/><rect x="776" y="730" width="140" height="6" rx="999" fill="#7c3aed"/><text x="776" y="752" font-size="10" fill="#94a3b8">confidence 0.71</text>
+<text x="24" y="808" font-size="11" fill="#94a3b8">docs/images/ui-overview-dark.svg &#183; dark vars: bg #0b1220 / surface #131d33 / text #e8edf7 / primary #60a5fa &#183; data-theme="dark"</text>
+</svg>

@@ -1,0 +1,140 @@
+{
+  "$defs": {
+    "AgentAuthentication": {
+      "additionalProperties": false,
+      "properties": {
+        "schema_version": {
+          "const": "1.0",
+          "default": "1.0",
+          "title": "Schema Version",
+          "type": "string"
+        },
+        "schemes": {
+          "items": {
+            "type": "string"
+          },
+          "maxItems": 8,
+          "minItems": 1,
+          "title": "Schemes",
+          "type": "array"
+        }
+      },
+      "required": [
+        "schemes"
+      ],
+      "title": "AgentAuthentication",
+      "type": "object"
+    },
+    "AgentSkill": {
+      "additionalProperties": false,
+      "properties": {
+        "schema_version": {
+          "const": "1.0",
+          "default": "1.0",
+          "title": "Schema Version",
+          "type": "string"
+        },
+        "id": {
+          "maxLength": 128,
+          "minLength": 1,
+          "pattern": "^[A-Za-z0-9._-]+$",
+          "title": "Id",
+          "type": "string"
+        },
+        "name": {
+          "maxLength": 256,
+          "minLength": 1,
+          "title": "Name",
+          "type": "string"
+        },
+        "description": {
+          "maxLength": 2000,
+          "minLength": 1,
+          "title": "Description",
+          "type": "string"
+        },
+        "input_modes": {
+          "items": {
+            "type": "string"
+          },
+          "maxItems": 8,
+          "title": "Input Modes",
+          "type": "array"
+        },
+        "output_modes": {
+          "items": {
+            "type": "string"
+          },
+          "maxItems": 8,
+          "title": "Output Modes",
+          "type": "array"
+        }
+      },
+      "required": [
+        "id",
+        "name",
+        "description"
+      ],
+      "title": "AgentSkill",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "description": "Specialist Agent Card (Spec \u00a77.1).",
+  "properties": {
+    "schema_version": {
+      "const": "1.0",
+      "default": "1.0",
+      "title": "Schema Version",
+      "type": "string"
+    },
+    "name": {
+      "maxLength": 128,
+      "minLength": 1,
+      "pattern": "^[a-z0-9-]+$",
+      "title": "Name",
+      "type": "string"
+    },
+    "description": {
+      "maxLength": 2000,
+      "minLength": 1,
+      "title": "Description",
+      "type": "string"
+    },
+    "url": {
+      "format": "uri",
+      "minLength": 1,
+      "title": "Url",
+      "type": "string"
+    },
+    "version": {
+      "maxLength": 32,
+      "minLength": 1,
+      "pattern": "^\\d+\\.\\d+\\.\\d+$",
+      "title": "Version",
+      "type": "string"
+    },
+    "skills": {
+      "items": {
+        "$ref": "#/$defs/AgentSkill"
+      },
+      "maxItems": 32,
+      "minItems": 1,
+      "title": "Skills",
+      "type": "array"
+    },
+    "authentication": {
+      "$ref": "#/$defs/AgentAuthentication"
+    }
+  },
+  "required": [
+    "name",
+    "description",
+    "url",
+    "version",
+    "skills",
+    "authentication"
+  ],
+  "title": "AgentCard",
+  "type": "object"
+}

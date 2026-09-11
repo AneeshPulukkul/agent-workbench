@@ -1,0 +1,64 @@
+{
+  "title": "Workbench — SLOs",
+  "uid": "workbench-slos",
+  "schemaVersion": 39,
+  "version": 1,
+  "tags": ["workbench", "slo"],
+  "panels": [
+    {
+      "id": 1,
+      "title": "Run duration p50/p95 vs SLO 120s",
+      "type": "timeseries",
+      "datasource": "Prometheus",
+      "targets": [
+        { "expr": "histogram_quantile(0.50, sum(rate(workbench_run_duration_bucket[10m])) by (le))", "legendFormat": "p50" },
+        { "expr": "histogram_quantile(0.95, sum(rate(workbench_run_duration_bucket[10m])) by (le))", "legendFormat": "p95" },
+        { "expr": "120", "legendFormat": "SLO" }
+      ]
+    },
+    {
+      "id": 2,
+      "title": "Tool failure rate vs SLO 20%",
+      "type": "timeseries",
+      "datasource": "Prometheus",
+      "targets": [
+        { "expr": "sum(rate(workbench_tool_calls_total{status=\"failed\"}[5m])) / sum(rate(workbench_tool_calls_total[5m]))", "legendFormat": "failure rate" },
+        { "expr": "0.2", "legendFormat": "SLO" }
+      ]
+    },
+    {
+      "id": 3,
+      "title": "Approval wait p95 vs SLO 30m",
+      "type": "timeseries",
+      "datasource": "Prometheus",
+      "targets": [
+        { "expr": "histogram_quantile(0.95, sum(rate(workbench_approval_wait_bucket[15m])) by (le))", "legendFormat": "p95" },
+        { "expr": "1800", "legendFormat": "SLO 30m" }
+      ]
+    },
+    {
+      "id": 4,
+      "title": "Cost burn $/h vs SLO $5/h",
+      "type": "timeseries",
+      "datasource": "Prometheus",
+      "targets": [
+        { "expr": "sum(rate(workbench_model_cost_usd_total[1h]))", "legendFormat": "$/h" },
+        { "expr": "5", "legendFormat": "SLO" }
+      ]
+    },
+    {
+      "id": 5,
+      "title": "Budget exhaustions",
+      "type": "timeseries",
+      "datasource": "Prometheus",
+      "targets": [{ "expr": "sum(rate(workbench_budget_exhausted_total[15m]))", "legendFormat": "per-s" }]
+    },
+    {
+      "id": 6,
+      "title": "API availability (ready probe)",
+      "type": "stat",
+      "datasource": "Prometheus",
+      "targets": [{ "expr": "avg_over_time(probe_success{job=\"agent-api\"}[30d])", "legendFormat": "availability" }]
+    }
+  ]
+}

@@ -1,0 +1,14 @@
+# CODEOWNERS — Agent Operations Workbench
+
+*                                    @maintainers
+/docs/architecture/                  @maintainers
+/docs/adr/                           @maintainers
+/packages/contracts/                 @maintainers
+/packages/security/                  @maintainers
+/apps/api/                           @maintainers
+/apps/mcp_server/                    @maintainers
+/apps/orchestrator/                  @maintainers
+/apps/a2a_agents/                    @maintainers
+/ui/                                 @maintainers
+/deploy/                             @maintainers
+/.github/                            @maintainers

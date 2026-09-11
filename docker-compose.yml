@@ -1,0 +1,168 @@
+name: agent-operations-workbench
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      # Required — no defaults. For explicit local-only dev, create a `.env`
+      # file (see `.env.example`) with e.g. POSTGRES_PASSWORD=workbench_local_only.
+      # Never commit real passwords; prod uses external secrets management.
+      POSTGRES_USER: ${POSTGRES_USER:?POSTGRES_USER is required (see .env.example)}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD is required (see .env.example)}
+      POSTGRES_DB: ${POSTGRES_DB:?POSTGRES_DB is required (see .env.example)}
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER:?POSTGRES_USER is required}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  mcp-server:
+    build:
+      context: .
+      dockerfile: apps/mcp_server/Dockerfile
+    environment:
+      APP_ENV: local
+      AUTH_MODE: mock
+      OTEL_EXPORTER_OTLP_ENDPOINT: http://otel-collector:4318
+      OTEL_SERVICE_NAME: mcp-server
+    ports:
+      - "8081:8081"
+    depends_on:
+      otel-collector:
+        condition: service_started
+
+  observability-agent:
+    build:
+      context: .
+      dockerfile: apps/a2a_agents/observability/Dockerfile
+    environment:
+      APP_ENV: local
+      AUTH_MODE: mock
+      OTEL_EXPORTER_OTLP_ENDPOINT: http://otel-collector:4318
+      OTEL_SERVICE_NAME: observability-agent
+    ports:
+      - "8082:8082"
+    depends_on:
+      mcp-server:
+        condition: service_started
+
+  api:
+    build:
+      context: .
+      dockerfile: apps/api/Dockerfile
+    environment:
+      APP_ENV: local
+      AUTH_MODE: mock
+      LLM_MODE: fake
+      # Built from required PG vars — no hardcoded credentials.
+      DATABASE_URL: postgresql+psycopg://${POSTGRES_USER:?POSTGRES_USER is required}:${POSTGRES_PASSWORD:?POSTGRES_PASSWORD is required}@postgres:5432/${POSTGRES_DB:?POSTGRES_DB is required}
+      MCP_SERVER_URL: http://mcp-server:8081
+      OBSERVABILITY_AGENT_URL: http://observability-agent:8082/a2a
+      OTEL_EXPORTER_OTLP_ENDPOINT: http://otel-collector:4318
+      OTEL_SERVICE_NAME: agent-api
+    ports:
+      - "8080:8080"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      mcp-server:
+        condition: service_started
+      observability-agent:
+        condition: service_started
+
+  worker:
+    build:
+      context: .
+      dockerfile: apps/worker/Dockerfile
+    environment:
+      APP_ENV: local
+      AUTH_MODE: mock
+      LLM_MODE: fake
+      DATABASE_URL: postgresql+psycopg://${POSTGRES_USER:?POSTGRES_USER is required}:${POSTGRES_PASSWORD:?POSTGRES_PASSWORD is required}@postgres:5432/${POSTGRES_DB:?POSTGRES_DB is required}
+      MCP_SERVER_URL: http://mcp-server:8081
+      OBSERVABILITY_AGENT_URL: http://observability-agent:8082/a2a
+      OTEL_EXPORTER_OTLP_ENDPOINT: http://otel-collector:4318
+      OTEL_SERVICE_NAME: agent-worker
+    depends_on:
+      postgres:
+        condition: service_healthy
+      api:
+        condition: service_started
+
+  otel-collector:
+    image: otel/opentelemetry-collector-contrib:0.111.0
+    command: ["--config=/etc/otelcol/config.yaml"]
+    volumes:
+      - ./deploy/otel-collector/config.yaml:/etc/otelcol/config.yaml:ro
+    ports:
+      - "4317:4317"
+      - "4318:4318"
+      - "8889:8889"
+      - "13133:13133"
+    healthcheck:
+      test: ["CMD", "/otelcol-contrib", "--version"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+    deploy:
+      resources:
+        limits:
+          cpus: "1.0"
+          memory: 512M
+        reservations:
+          memory: 128M
+
+  jaeger:
+    image: jaegertracing/all-in-one:1.62
+    environment:
+      COLLECTOR_OTLP_ENABLED: "true"
+    ports:
+      - "16686:16686"
+      - "4319:4317"
+    depends_on:
+      otel-collector:
+        condition: service_started
+
+  prometheus:
+    image: prom/prometheus:v2.53.0
+    volumes:
+      - ./deploy/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - ./deploy/prometheus/alerts.yml:/etc/prometheus/alerts.yml:ro
+    ports:
+      - "9090:9090"
+    depends_on:
+      otel-collector:
+        condition: service_started
+
+  grafana:
+    image: grafana/grafana:11.1.0
+    environment:
+      # Required — no default admin/admin. Local-only override:
+      # GF_SECURITY_ADMIN_USER=admin GF_SECURITY_ADMIN_PASSWORD=workbench_local_only
+      # in your untracked `.env` (see `.env.example`). Prod uses external secrets.
+      GF_SECURITY_ADMIN_USER: ${GF_SECURITY_ADMIN_USER:?GF_SECURITY_ADMIN_USER is required (see .env.example)}
+      GF_SECURITY_ADMIN_PASSWORD: ${GF_SECURITY_ADMIN_PASSWORD:?GF_SECURITY_ADMIN_PASSWORD is required (see .env.example)}
+    volumes:
+      - ./deploy/grafana/provisioning:/etc/grafana/provisioning:ro
+      - ./deploy/grafana/dashboards:/var/lib/grafana/dashboards:ro
+    ports:
+      - "3001:3000"
+    depends_on:
+      prometheus:
+        condition: service_started
+
+  ui:
+    build:
+      context: .
+      dockerfile: ui/web/Dockerfile
+    ports:
+      - "3000:80"
+    depends_on:
+      api:
+        condition: service_started
+
+volumes:
+  pgdata:

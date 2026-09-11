@@ -1,0 +1,6 @@
+apiVersion: v2
+name: agent-ui
+description: Web UI (React+TS static, AG-UI client) — tolerates unknown events
+type: application
+version: 0.1.0
+appVersion: "0.1.0"

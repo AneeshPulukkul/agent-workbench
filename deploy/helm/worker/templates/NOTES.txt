@@ -1,0 +1,7 @@
+{{- if eq .Values.env.AUTH_MODE "oidc" }}
+{{- if empty .Values.config.oidcIssuerUrl }}{{ fail "config.oidcIssuerUrl is required when env.AUTH_MODE=oidc (fail-closed OIDC)" }}{{- end }}
+{{- if empty .Values.config.oidcAudience }}{{ fail "config.oidcAudience is required when env.AUTH_MODE=oidc (fail-closed OIDC)" }}{{- end }}
+Agent worker deployed with OIDC (issuer: {{ .Values.config.oidcIssuerUrl }}, audience: {{ .Values.config.oidcAudience }}).
+{{- else }}
+Agent worker deployed with AUTH_MODE={{ .Values.env.AUTH_MODE }} (mock allowed in local/test only; prod requires oidc + issuer/audience).
+{{- end }}

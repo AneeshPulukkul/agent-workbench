@@ -1,0 +1,45 @@
+# python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+.env
+!.env.example
+# builds
+dist/
+build/
+# tooling
+.mypy_cache/
+.ruff_cache/
+.pytest_cache/
+.coverage
+htmlcov/
+# node
+node_modules/
+ui/web/dist/
+# docker / local data
+pgdata/
+# ide
+.vscode/
+.idea/
+*.swp
+# os
+.DS_Store
+Thumbs.db
+# secrets / local overrides
+*.pem
+*.key
+.env.local
+.env.*.local
+docker-compose.override.yml
+# test / eval outputs
+.testmondata
+*.log
+coverage.xml
+junit.xml
+# screenshots raw (keep docs/images committed, ignore bulky raw)
+*.mp4
+*.mov
+playwright-report/
+test-results/

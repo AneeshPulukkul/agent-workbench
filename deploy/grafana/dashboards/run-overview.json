@@ -1,0 +1,68 @@
+{
+  "title": "Workbench — Run overview",
+  "uid": "workbench-runs",
+  "schemaVersion": 39,
+  "version": 1,
+  "tags": ["workbench"],
+  "panels": [
+    {
+      "id": 1,
+      "title": "Runs by status",
+      "type": "stat",
+      "datasource": "Prometheus",
+      "targets": [{ "expr": "sum by (status) (workbench_runs_finished_total)" }]
+    },
+    {
+      "id": 2,
+      "title": "Run duration p50/p95",
+      "type": "timeseries",
+      "datasource": "Prometheus",
+      "targets": [
+        { "expr": "histogram_quantile(0.50, sum(rate(workbench_run_duration_bucket[10m])) by (le))", "legendFormat": "p50" },
+        { "expr": "histogram_quantile(0.95, sum(rate(workbench_run_duration_bucket[10m])) by (le))", "legendFormat": "p95" }
+      ]
+    },
+    {
+      "id": 3,
+      "title": "Tool failure rate by tool",
+      "type": "timeseries",
+      "datasource": "Prometheus",
+      "targets": [
+        { "expr": "sum by (tool) (rate(workbench_tool_calls_total{status=\"failed\"}[5m])) / sum by (tool) (rate(workbench_tool_calls_total[5m]))", "legendFormat": "{{tool}}" }
+      ]
+    },
+    {
+      "id": 4,
+      "title": "A2A latency p95",
+      "type": "timeseries",
+      "datasource": "Prometheus",
+      "targets": [
+        { "expr": "histogram_quantile(0.95, sum(rate(workbench_a2a_latency_bucket[10m])) by (le))", "legendFormat": "p95" }
+      ]
+    },
+    {
+      "id": 5,
+      "title": "Approval wait p50/p95",
+      "type": "timeseries",
+      "datasource": "Prometheus",
+      "targets": [
+        { "expr": "histogram_quantile(0.50, sum(rate(workbench_approval_wait_bucket[15m])) by (le))", "legendFormat": "p50" },
+        { "expr": "histogram_quantile(0.95, sum(rate(workbench_approval_wait_bucket[15m])) by (le))", "legendFormat": "p95" }
+      ]
+    },
+    {
+      "id": 6,
+      "title": "Policy decisions",
+      "type": "stat",
+      "datasource": "Prometheus",
+      "targets": [{ "expr": "sum by (decision) (workbench_policy_decisions_total)" }]
+    },
+    {
+      "id": 7,
+      "title": "SSE reconnects",
+      "type": "stat",
+      "datasource": "Prometheus",
+      "targets": [{ "expr": "sum(workbench_sse_reconnects_total)" }]
+    }
+  ]
+}

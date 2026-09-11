@@ -1,0 +1,83 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "agent-operations-workbench"
+version = "0.1.0"
+description = "Agent Operations Workbench — case resolution agent platform (local mock adapters only)"
+readme = "README.md"
+requires-python = ">=3.12,<3.14"
+license = { text = "MIT" }
+dependencies = [
+    "fastapi>=0.115,<0.120",
+    "uvicorn[standard]>=0.30,<0.35",
+    "sqlalchemy>=2.0,<2.1",
+    "alembic>=1.13,<1.16",
+    "psycopg[binary]>=3.1,<3.3",
+    "pydantic>=2.7,<3.0",
+    "pydantic-settings>=2.3,<3.0",
+    "litellm>=1.52,<2.0",
+    "langgraph>=0.2,<0.4",
+    "opentelemetry-api>=1.27,<2.0",
+    "opentelemetry-sdk>=1.27,<2.0",
+    "opentelemetry-exporter-otlp>=1.27,<2.0",
+    "opentelemetry-instrumentation-fastapi>=0.48,<0.50",
+    "httpx>=0.27,<0.29",
+    "mcp>=1.12,<2",
+    "sse-starlette>=2.1,<4",
+    "tenacity>=8.3,<9.0",
+    "structlog>=24.1,<25.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.0,<9.0",
+    "pytest-asyncio>=0.23,<1.0",
+    "httpx>=0.27,<0.29",
+    "ruff>=0.4,<0.6",
+    "mypy>=1.10,<2.0",
+    "pre-commit>=3.6,<4.0",
+    "pip-tools>=7.3,<8.0",
+    "types-requests>=2.31,<3.0",
+]
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["apps*", "packages*"]
+
+[tool.ruff]
+target-version = "py312"
+line-length = 100
+extend-exclude = [".venv", "__pycache__", "packages/persistence/migrations/versions"]
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B", "SIM", "RUF"]
+ignore = ["E501"]
+
+[tool.ruff.format]
+quote-style = "double"
+
+[tool.mypy]
+python_version = "3.12"
+strict = false
+ignore_missing_imports = true
+warn_return_any = false
+warn_unused_configs = true
+show_error_codes = true
+exclude = ["\\.venv", "__pycache__", "ui/", "packages/persistence/migrations/"]
+[[tool.mypy.overrides]]
+module = "tests.*"
+ignore_errors = false
+disallow_untyped_defs = false
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+asyncio_mode = "strict"
+markers = [
+    "contract: protocol/contract tests (AG-UI, MCP, A2A, OTel schemas)",
+    "integration: tests needing docker compose services",
+]
+
+[tool.alembic]
+script_location = "packages/persistence/migrations"

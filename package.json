@@ -1,0 +1,11 @@
+{
+  "name": "agent-operations-workbench",
+  "version": "0.1.0",
+  "private": true,
+  "workspaces": ["ui/web"],
+  "scripts": {
+    "dev": "npm --workspace ui/web run dev",
+    "build": "npm --workspace ui/web run build",
+    "lint": "npm --workspace ui/web run lint"
+  }
+}

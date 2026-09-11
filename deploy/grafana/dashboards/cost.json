@@ -1,0 +1,40 @@
+{
+  "title": "Workbench — Cost & error budget",
+  "uid": "workbench-cost",
+  "schemaVersion": 39,
+  "version": 1,
+  "tags": ["workbench", "cost"],
+  "panels": [
+    {
+      "id": 1,
+      "title": "Model cost USD (1h rate)",
+      "type": "timeseries",
+      "datasource": "Prometheus",
+      "targets": [{ "expr": "sum(rate(workbench_model_cost_usd_total[1h]))", "legendFormat": "$/s" }]
+    },
+    {
+      "id": 2,
+      "title": "Model tokens by model",
+      "type": "timeseries",
+      "datasource": "Prometheus",
+      "targets": [{ "expr": "sum by (model) (rate(workbench_model_tokens_total[10m]))", "legendFormat": "{{model}}" }]
+    },
+    {
+      "id": 3,
+      "title": "Budget exhaustions by budget",
+      "type": "stat",
+      "datasource": "Prometheus",
+      "targets": [{ "expr": "sum by (budget) (workbench_budget_exhausted_total)" }]
+    },
+    {
+      "id": 4,
+      "title": "Tool errors (error budget burn)",
+      "type": "timeseries",
+      "datasource": "Prometheus",
+      "targets": [
+        { "expr": "sum(rate(workbench_tool_calls_total{status=\"failed\"}[5m]))", "legendFormat": "tool errors/s" },
+        { "expr": "sum(rate(workbench_a2a_calls_total{status=\"failed\"}[5m])) + sum(rate(workbench_a2a_calls_total{status=\"timeout\"}[5m]))", "legendFormat": "a2a failures/s" }
+      ]
+    }
+  ]
+}

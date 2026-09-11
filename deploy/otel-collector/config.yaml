@@ -1,0 +1,77 @@
+# OTel Collector (local): OTLP in -> batch -> Jaeger / Prometheus / logs.
+# Azure Monitor exporter option documented for AKS (uncomment + set key).
+receivers:
+  otlp:
+    protocols:
+      grpc:
+        endpoint: 0.0.0.0:4317
+      http:
+        endpoint: 0.0.0.0:4318
+
+processors:
+  memory_limiter:
+    check_interval: 5s
+    limit_mib: 512
+    spike_limit_mib: 128
+  batch:
+    send_batch_size: 512
+    timeout: 5s
+  attributes/redact:
+    # Defense-in-depth: drop attributes that look like secrets if a service
+    # accidentally forwards them (SDK redaction in conventions.py is primary).
+    actions:
+      - key: http.request.header.authorization
+        action: delete
+      - key: http.request.header.cookie
+        action: delete
+  resourcedetection/env:
+    detectors: [env]
+    timeout: 2s
+
+connectors:
+  spanmetrics:
+    namespace: workbench
+    histogram:
+      explicit:
+        buckets: [0.05, 0.1, 0.25, 0.5, 1, 2.5, 5, 10, 30]
+
+exporters:
+  debug:
+    verbosity: basic
+  otlp/jaeger:
+    endpoint: http://jaeger:4317
+    tls:
+      insecure: true
+  prometheus:
+    endpoint: 0.0.0.0:8889
+    namespace: workbench
+  otlphttp/logs:
+    endpoint: http://loki:3100/otlp
+    tls:
+      insecure: true
+  # Azure Monitor (AKS/W2+): set APPLICATIONINSIGHTS_CONNECTION_STRING and uncomment.
+  # azuremonitor:
+  #   connection_string: ${env:APPLICATIONINSIGHTS_CONNECTION_STRING}
+
+extensions:
+  health_check:
+    endpoint: 0.0.0.0:13133
+
+service:
+  extensions: [health_check]
+  telemetry:
+    logs:
+      level: info
+  pipelines:
+    traces:
+      receivers: [otlp]
+      processors: [memory_limiter, attributes/redact, batch]
+      exporters: [debug, otlp/jaeger, spanmetrics]
+    metrics:
+      receivers: [otlp, spanmetrics]
+      processors: [memory_limiter, batch]
+      exporters: [debug, prometheus]
+    logs:
+      receivers: [otlp]
+      processors: [memory_limiter, batch]
+      exporters: [debug, otlphttp/logs]

@@ -1,0 +1,52 @@
+# One chart, N agents: set agent.name to deploy a single specialist per release,
+# or install the chart once per agent (recommended: observability, knowledge,
+# change-risk, remediation).
+agent:
+  name: observability
+  card: correlate-service-symptoms
+replicaCount: 1
+image:
+  repository: agent-workbench/a2a-observability
+  tag: "0.1.0"
+  pullPolicy: IfNotPresent
+service:
+  port: 8082
+  targetPort: 8082
+env:
+  APP_ENV: production
+  AUTH_MODE: oidc
+  LOG_LEVEL: info
+config:
+  otelEndpoint: http://otel-collector:4318
+  mcpServerUrl: http://mcp-server:8081
+resources:
+  requests: { cpu: 100m, memory: 128Mi }
+  limits: { cpu: 500m, memory: 256Mi }
+probes:
+  livenessPath: /health
+  readinessPath: /ready
+  initialDelaySeconds: 10
+  periodSeconds: 20
+autoscaling:
+  enabled: true
+  minReplicas: 1
+  maxReplicas: 4
+  targetCPUUtilizationPercentage: 75
+  scaleToZeroNote: KEDA ScaledObject optional for scale-to-zero; HPA minReplicas=1 by default.
+pdb:
+  enabled: false
+  minAvailable: 0
+serviceAccount:
+  create: true
+  name: agent-a2a
+  annotations: {}
+networkPolicy:
+  enabled: true
+  ingressNamespace: ingress-nginx
+  ingressFrom: []
+  # A2A agents call read-only MCP tools only; no direct enterprise egress.
+  egressTo:
+    - to: mcp-server
+      port: 8081
+    - to: otel-collector
+      port: 4318

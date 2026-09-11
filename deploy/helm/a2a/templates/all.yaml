@@ -1,0 +1,140 @@
+# Parameterized A2A specialist. Install once per agent:
+# helm install a2a-observability ./deploy/helm/a2a --set agent.name=observability ...
+# helm install a2a-knowledge ./deploy/helm/a2a --set agent.name=knowledge --set image.repository=agent-workbench/a2a-knowledge ...
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: {{ .Values.serviceAccount.name }}-{{ .Values.agent.name }}
+  labels: { app: a2a-{{ .Values.agent.name }} }
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: a2a-{{ .Values.agent.name }}-config
+  labels: { app: a2a-{{ .Values.agent.name }} }
+data:
+  APP_ENV: {{ .Values.env.APP_ENV | quote }}
+  AUTH_MODE: {{ .Values.env.AUTH_MODE | quote }}
+  LOG_LEVEL: {{ .Values.env.LOG_LEVEL | quote }}
+  AGENT_NAME: {{ .Values.agent.name | quote }}
+  AGENT_CARD: {{ .Values.agent.card | quote }}
+  MCP_SERVER_URL: {{ .Values.config.mcpServerUrl | quote }}
+  OTEL_EXPORTER_OTLP_ENDPOINT: {{ .Values.config.otelEndpoint | quote }}
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: a2a-{{ .Values.agent.name }}
+  labels: { app: a2a-{{ .Values.agent.name }} }
+spec:
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels: { app: a2a-{{ .Values.agent.name }} }
+  template:
+    metadata:
+      labels: { app: a2a-{{ .Values.agent.name }} }
+    spec:
+      serviceAccountName: {{ .Values.serviceAccount.name }}-{{ .Values.agent.name }}
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 65532
+        runAsGroup: 65532
+        fsGroup: 65532
+        seccompProfile: { type: RuntimeDefault }
+      containers:
+        - name: agent
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          ports:
+            - containerPort: {{ .Values.service.targetPort }}
+          envFrom:
+            - configMapRef: { name: a2a-{{ .Values.agent.name }}-config }
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            runAsNonRoot: true
+            runAsUser: 65532
+            capabilities: { drop: [ALL] }
+          livenessProbe:
+            httpGet: { path: {{ .Values.probes.livenessPath }}, port: {{ .Values.service.targetPort }} }
+            initialDelaySeconds: {{ .Values.probes.initialDelaySeconds }}
+            periodSeconds: {{ .Values.probes.periodSeconds }}
+          readinessProbe:
+            httpGet: { path: {{ .Values.probes.readinessPath }}, port: {{ .Values.service.targetPort }} }
+            initialDelaySeconds: {{ .Values.probes.initialDelaySeconds }}
+            periodSeconds: {{ .Values.probes.periodSeconds }}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: a2a-{{ .Values.agent.name }}
+  labels: { app: a2a-{{ .Values.agent.name }} }
+spec:
+  selector: { app: a2a-{{ .Values.agent.name }} }
+  ports:
+    - port: {{ .Values.service.port }}
+      targetPort: {{ .Values.service.targetPort }}
+---
+{{- if .Values.autoscaling.enabled }}
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: a2a-{{ .Values.agent.name }}
+spec:
+  scaleTargetRef: { apiVersion: apps/v1, kind: Deployment, name: a2a-{{ .Values.agent.name }} }
+  minReplicas: {{ .Values.autoscaling.minReplicas }}
+  maxReplicas: {{ .Values.autoscaling.maxReplicas }}
+  metrics:
+    - type: Resource
+      resource: { name: cpu, target: { type: Utilization, averageUtilization: {{ .Values.autoscaling.targetCPUUtilizationPercentage }} } }
+{{- end }}
+---
+{{- if .Values.pdb.enabled }}
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: a2a-{{ .Values.agent.name }}
+spec:
+  minAvailable: {{ .Values.pdb.minAvailable }}
+  selector:
+    matchLabels: { app: a2a-{{ .Values.agent.name }} }
+{{- end }}
+---
+{{- if .Values.networkPolicy.enabled }}
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: a2a-{{ .Values.agent.name }}
+spec:
+  podSelector:
+    matchLabels: { app: a2a-{{ .Values.agent.name }} }
+  policyTypes: [Ingress, Egress]
+  ingress:
+    # Restricted: only API + MCP callers (never open).
+    - from:
+        - podSelector:
+            matchLabels: { app: agent-api }
+        - podSelector:
+            matchLabels: { app: mcp-server }
+        {{- range .Values.networkPolicy.ingressFrom }}
+        - podSelector:
+            matchLabels: { app: {{ .from }} }
+        {{- end }}
+      ports:
+        - port: {{ .Values.service.targetPort }}
+  egress:
+    - to:
+        - namespaceSelector: { matchLabels: { name: kube-system } }
+      ports:
+        - port: 53
+          protocol: UDP
+    {{- range .Values.networkPolicy.egressTo }}
+    - to:
+        - podSelector:
+            matchLabels: { app: {{ .to }} }
+      ports:
+        - port: {{ .port }}
+    {{- end }}
+{{- end }}

@@ -1,0 +1,112 @@
+{
+  "additionalProperties": false,
+  "description": "Run creation request (POST /v1/runs). Tenant comes from auth token.",
+  "properties": {
+    "schema_version": {
+      "const": "1.0",
+      "default": "1.0",
+      "title": "Schema Version",
+      "type": "string"
+    },
+    "run_id": {
+      "maxLength": 128,
+      "minLength": 1,
+      "pattern": "^[A-Za-z0-9._-]+$",
+      "title": "Run Id",
+      "type": "string"
+    },
+    "tenant_id": {
+      "maxLength": 128,
+      "minLength": 1,
+      "pattern": "^[A-Za-z0-9._-]+$",
+      "title": "Tenant Id",
+      "type": "string"
+    },
+    "user_id": {
+      "maxLength": 256,
+      "minLength": 1,
+      "title": "User Id",
+      "type": "string"
+    },
+    "objective": {
+      "maxLength": 8192,
+      "minLength": 1,
+      "title": "Objective",
+      "type": "string"
+    },
+    "context": {
+      "additionalProperties": true,
+      "title": "Context",
+      "type": "object"
+    },
+    "max_tool_calls": {
+      "default": 20,
+      "maximum": 100,
+      "minimum": 1,
+      "title": "Max Tool Calls",
+      "type": "integer"
+    },
+    "max_model_calls": {
+      "default": 10,
+      "maximum": 50,
+      "minimum": 1,
+      "title": "Max Model Calls",
+      "type": "integer"
+    },
+    "max_cost_usd": {
+      "default": 2.0,
+      "maximum": 1000.0,
+      "minimum": 0.0,
+      "title": "Max Cost Usd",
+      "type": "number"
+    },
+    "idempotency_key": {
+      "anyOf": [
+        {
+          "maxLength": 128,
+          "minLength": 1,
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Idempotency Key"
+    },
+    "trace_id": {
+      "anyOf": [
+        {
+          "maxLength": 128,
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Trace Id"
+    },
+    "correlation_id": {
+      "anyOf": [
+        {
+          "maxLength": 128,
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Correlation Id"
+    }
+  },
+  "required": [
+    "run_id",
+    "tenant_id",
+    "user_id",
+    "objective"
+  ],
+  "title": "AgentRequest",
+  "type": "object"
+}

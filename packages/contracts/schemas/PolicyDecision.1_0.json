@@ -1,0 +1,127 @@
+{
+  "$defs": {
+    "RiskLevel": {
+      "enum": [
+        "low",
+        "medium",
+        "high",
+        "critical"
+      ],
+      "title": "RiskLevel",
+      "type": "string"
+    }
+  },
+  "additionalProperties": false,
+  "description": "Pure function of (principal, action, context). Span + audit record each.",
+  "properties": {
+    "schema_version": {
+      "const": "1.0",
+      "default": "1.0",
+      "title": "Schema Version",
+      "type": "string"
+    },
+    "rule_version": {
+      "default": "1.0",
+      "description": "Policy rule-bundle version (additive; default 1.0).",
+      "maxLength": 32,
+      "minLength": 1,
+      "pattern": "^\\d+\\.\\d+$",
+      "title": "Rule Version",
+      "type": "string"
+    },
+    "allowed": {
+      "title": "Allowed",
+      "type": "boolean"
+    },
+    "requires_approval": {
+      "title": "Requires Approval",
+      "type": "boolean"
+    },
+    "reason": {
+      "maxLength": 2000,
+      "minLength": 1,
+      "title": "Reason",
+      "type": "string"
+    },
+    "required_scopes": {
+      "items": {
+        "type": "string"
+      },
+      "maxItems": 16,
+      "title": "Required Scopes",
+      "type": "array"
+    },
+    "max_impact": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/RiskLevel"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null
+    },
+    "tenant_id": {
+      "anyOf": [
+        {
+          "maxLength": 128,
+          "minLength": 1,
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Tenant Id"
+    },
+    "run_id": {
+      "anyOf": [
+        {
+          "maxLength": 128,
+          "minLength": 1,
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Run Id"
+    },
+    "trace_id": {
+      "anyOf": [
+        {
+          "maxLength": 128,
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Trace Id"
+    },
+    "correlation_id": {
+      "anyOf": [
+        {
+          "maxLength": 128,
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Correlation Id"
+    }
+  },
+  "required": [
+    "allowed",
+    "requires_approval",
+    "reason"
+  ],
+  "title": "PolicyDecision",
+  "type": "object"
+}

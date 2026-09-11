@@ -1,0 +1,373 @@
+{
+  "$defs": {
+    "Finding": {
+      "additionalProperties": false,
+      "description": "Structured diagnosis unit. Every material finding cites >=1 evidence ref.",
+      "properties": {
+        "schema_version": {
+          "const": "1.0",
+          "default": "1.0",
+          "title": "Schema Version",
+          "type": "string"
+        },
+        "finding_id": {
+          "maxLength": 128,
+          "minLength": 1,
+          "pattern": "^[A-Za-z0-9._-]+$",
+          "title": "Finding Id",
+          "type": "string"
+        },
+        "run_id": {
+          "anyOf": [
+            {
+              "maxLength": 128,
+              "minLength": 1,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Run Id"
+        },
+        "tenant_id": {
+          "anyOf": [
+            {
+              "maxLength": 128,
+              "minLength": 1,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Tenant Id"
+        },
+        "title": {
+          "maxLength": 256,
+          "minLength": 1,
+          "title": "Title",
+          "type": "string"
+        },
+        "summary": {
+          "maxLength": 4000,
+          "minLength": 1,
+          "title": "Summary",
+          "type": "string"
+        },
+        "evidence_refs": {
+          "items": {
+            "type": "string"
+          },
+          "maxItems": 64,
+          "title": "Evidence Refs",
+          "type": "array"
+        },
+        "confidence": {
+          "maximum": 1.0,
+          "minimum": 0.0,
+          "title": "Confidence",
+          "type": "number"
+        },
+        "severity": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/SeverityLevel"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "trace_id": {
+          "anyOf": [
+            {
+              "maxLength": 128,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Trace Id"
+        },
+        "correlation_id": {
+          "anyOf": [
+            {
+              "maxLength": 128,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Correlation Id"
+        }
+      },
+      "required": [
+        "finding_id",
+        "title",
+        "summary",
+        "confidence"
+      ],
+      "title": "Finding",
+      "type": "object"
+    },
+    "ProposedAction": {
+      "additionalProperties": false,
+      "description": "Consequential action proposal. NEVER built from raw model text directly.\n\nThe orchestrator must validate ``input`` against the target tool's JSON\nSchema and evaluate policy + human approval before execution.",
+      "properties": {
+        "schema_version": {
+          "const": "1.0",
+          "default": "1.0",
+          "title": "Schema Version",
+          "type": "string"
+        },
+        "action_id": {
+          "maxLength": 128,
+          "minLength": 1,
+          "pattern": "^[A-Za-z0-9._-]+$",
+          "title": "Action Id",
+          "type": "string"
+        },
+        "run_id": {
+          "anyOf": [
+            {
+              "maxLength": 128,
+              "minLength": 1,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Run Id"
+        },
+        "tenant_id": {
+          "anyOf": [
+            {
+              "maxLength": 128,
+              "minLength": 1,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Tenant Id"
+        },
+        "tool_name": {
+          "maxLength": 128,
+          "minLength": 1,
+          "pattern": "^[a-z0-9_]+\\.[a-z0-9_]+$",
+          "title": "Tool Name",
+          "type": "string"
+        },
+        "reason": {
+          "maxLength": 2000,
+          "minLength": 1,
+          "title": "Reason",
+          "type": "string"
+        },
+        "input": {
+          "additionalProperties": true,
+          "title": "Input",
+          "type": "object"
+        },
+        "risk": {
+          "$ref": "#/$defs/RiskLevel"
+        },
+        "requires_approval": {
+          "default": true,
+          "title": "Requires Approval",
+          "type": "boolean"
+        },
+        "rollback": {
+          "anyOf": [
+            {
+              "maxLength": 2000,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Rollback"
+        },
+        "dry_run": {
+          "default": false,
+          "title": "Dry Run",
+          "type": "boolean"
+        },
+        "idempotency_key": {
+          "maxLength": 128,
+          "minLength": 1,
+          "title": "Idempotency Key",
+          "type": "string"
+        },
+        "trace_id": {
+          "anyOf": [
+            {
+              "maxLength": 128,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Trace Id"
+        },
+        "correlation_id": {
+          "anyOf": [
+            {
+              "maxLength": 128,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Correlation Id"
+        }
+      },
+      "required": [
+        "action_id",
+        "tool_name",
+        "reason",
+        "risk",
+        "idempotency_key"
+      ],
+      "title": "ProposedAction",
+      "type": "object"
+    },
+    "RiskLevel": {
+      "enum": [
+        "low",
+        "medium",
+        "high",
+        "critical"
+      ],
+      "title": "RiskLevel",
+      "type": "string"
+    },
+    "SeverityLevel": {
+      "enum": [
+        "low",
+        "medium",
+        "high",
+        "critical"
+      ],
+      "title": "SeverityLevel",
+      "type": "string"
+    }
+  },
+  "additionalProperties": false,
+  "description": "Final structured synthesis for a run.",
+  "properties": {
+    "schema_version": {
+      "const": "1.0",
+      "default": "1.0",
+      "title": "Schema Version",
+      "type": "string"
+    },
+    "run_id": {
+      "anyOf": [
+        {
+          "maxLength": 128,
+          "minLength": 1,
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Run Id"
+    },
+    "tenant_id": {
+      "anyOf": [
+        {
+          "maxLength": 128,
+          "minLength": 1,
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Tenant Id"
+    },
+    "answer": {
+      "maxLength": 16000,
+      "minLength": 1,
+      "title": "Answer",
+      "type": "string"
+    },
+    "findings": {
+      "items": {
+        "$ref": "#/$defs/Finding"
+      },
+      "maxItems": 64,
+      "title": "Findings",
+      "type": "array"
+    },
+    "proposed_actions": {
+      "items": {
+        "$ref": "#/$defs/ProposedAction"
+      },
+      "maxItems": 16,
+      "title": "Proposed Actions",
+      "type": "array"
+    },
+    "unresolved_questions": {
+      "items": {
+        "type": "string"
+      },
+      "maxItems": 32,
+      "title": "Unresolved Questions",
+      "type": "array"
+    },
+    "trace_id": {
+      "anyOf": [
+        {
+          "maxLength": 128,
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Trace Id"
+    },
+    "correlation_id": {
+      "anyOf": [
+        {
+          "maxLength": 128,
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Correlation Id"
+    }
+  },
+  "required": [
+    "answer"
+  ],
+  "title": "AgentResult",
+  "type": "object"
+}

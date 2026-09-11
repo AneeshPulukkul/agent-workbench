@@ -1,0 +1,43 @@
+replicaCount: 2
+image:
+  repository: agent-workbench/mcp-server
+  tag: "0.1.0"
+  pullPolicy: IfNotPresent
+service:
+  port: 8081
+  targetPort: 8081
+env:
+  APP_ENV: production
+  AUTH_MODE: oidc
+  LOG_LEVEL: info
+  MCP_ORIGIN_CHECK: strict
+config:
+  otelEndpoint: http://otel-collector:4318
+resources:
+  requests: { cpu: 250m, memory: 256Mi }
+  limits: { cpu: "1", memory: 512Mi }
+probes:
+  livenessPath: /health
+  readinessPath: /ready
+  initialDelaySeconds: 10
+  periodSeconds: 15
+autoscaling:
+  enabled: true
+  minReplicas: 2
+  maxReplicas: 8
+  targetCPUUtilizationPercentage: 70
+pdb:
+  enabled: true
+  minAvailable: 1
+serviceAccount:
+  create: true
+  name: agent-mcp
+  annotations: {}
+networkPolicy:
+  enabled: true
+  ingressNamespace: ingress-nginx
+  ingressFrom: []
+  # MCP may call enterprise endpoints only via adapter allowlist (SSRF guard).
+  egressTo:
+    - to: otel-collector
+      port: 4318

@@ -1,0 +1,149 @@
+{{- /* Fail-closed OIDC: AUTH_MODE=oidc requires non-empty oidcIssuerUrl/audience. */ }}
+{{- if eq .Values.env.AUTH_MODE "oidc" }}
+{{- $_ := required "config.oidcIssuerUrl is required when env.AUTH_MODE=oidc (fail-closed OIDC)" .Values.config.oidcIssuerUrl }}
+{{- $_ := required "config.oidcAudience is required when env.AUTH_MODE=oidc (fail-closed OIDC)" .Values.config.oidcAudience }}
+{{- end }}
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: {{ .Values.serviceAccount.name }}
+  labels: { app: agent-worker }
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: agent-worker-config
+  labels: { app: agent-worker }
+data:
+  APP_ENV: {{ .Values.env.APP_ENV | quote }}
+  AUTH_MODE: {{ .Values.env.AUTH_MODE | quote }}
+  LLM_MODE: {{ .Values.env.LLM_MODE | quote }}
+  LOG_LEVEL: {{ .Values.env.LOG_LEVEL | quote }}
+  WORKER_CONCURRENCY: {{ .Values.env.WORKER_CONCURRENCY | quote }}
+  OTEL_EXPORTER_OTLP_ENDPOINT: {{ .Values.config.otelEndpoint | quote }}
+  OIDC_ISSUER_URL: {{ .Values.config.oidcIssuerUrl | quote }}
+  OIDC_AUDIENCE: {{ .Values.config.oidcAudience | quote }}
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: agent-worker
+  labels: { app: agent-worker }
+spec:
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels: { app: agent-worker }
+  template:
+    metadata:
+      labels: { app: agent-worker }
+    spec:
+      serviceAccountName: {{ .Values.serviceAccount.name }}
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 65532
+        runAsGroup: 65532
+        fsGroup: 65532
+        seccompProfile: { type: RuntimeDefault }
+      containers:
+        - name: worker
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          ports:
+            - containerPort: {{ .Values.service.targetPort }}
+          envFrom:
+            - configMapRef: { name: agent-worker-config }
+          env:
+            - name: DATABASE_URL
+              valueFrom:
+                secretKeyRef: { name: agent-worker-secrets, key: database-url }
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            runAsNonRoot: true
+            runAsUser: 65532
+            capabilities: { drop: [ALL] }
+          livenessProbe:
+            httpGet: { path: {{ .Values.probes.livenessPath }}, port: {{ .Values.service.targetPort }} }
+            initialDelaySeconds: {{ .Values.probes.initialDelaySeconds }}
+            periodSeconds: {{ .Values.probes.periodSeconds }}
+          readinessProbe:
+            httpGet: { path: {{ .Values.probes.readinessPath }}, port: {{ .Values.service.targetPort }} }
+            initialDelaySeconds: {{ .Values.probes.initialDelaySeconds }}
+            periodSeconds: {{ .Values.probes.periodSeconds }}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: agent-worker
+  labels: { app: agent-worker }
+spec:
+  selector: { app: agent-worker }
+  ports:
+    - port: {{ .Values.service.port }}
+      targetPort: {{ .Values.service.targetPort }}
+---
+{{- if .Values.autoscaling.enabled }}
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: agent-worker
+spec:
+  scaleTargetRef: { apiVersion: apps/v1, kind: Deployment, name: agent-worker }
+  minReplicas: {{ .Values.autoscaling.minReplicas }}
+  maxReplicas: {{ .Values.autoscaling.maxReplicas }}
+  metrics:
+    - type: Resource
+      resource: { name: cpu, target: { type: Utilization, averageUtilization: {{ .Values.autoscaling.targetCPUUtilizationPercentage }} } }
+    # Optional queue-depth / custom metrics (e.g. Prometheus workbench_queue_depth).
+    {{- range .Values.autoscaling.customMetrics }}
+    - {{ . | toYaml | nindent 6 }}
+    {{- end }}
+{{- end }}
+---
+{{- if .Values.pdb.enabled }}
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: agent-worker
+spec:
+  minAvailable: {{ .Values.pdb.minAvailable }}
+  selector:
+    matchLabels: { app: agent-worker }
+{{- end }}
+---
+{{- if .Values.networkPolicy.enabled }}
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: agent-worker
+spec:
+  podSelector:
+    matchLabels: { app: agent-worker }
+  policyTypes: [Ingress, Egress]
+  ingress:
+    # Restricted: only the API enqueues/controls the worker (never open).
+    - from:
+        - podSelector:
+            matchLabels: { app: agent-api }
+        {{- range .Values.networkPolicy.ingressFrom }}
+        - podSelector:
+            matchLabels: { app: {{ .from }} }
+        {{- end }}
+      ports:
+        - port: {{ .Values.service.targetPort }}
+  egress:
+    - to:
+        - namespaceSelector: { matchLabels: { name: kube-system } }
+      ports:
+        - port: 53
+          protocol: UDP
+    {{- range .Values.networkPolicy.egressTo }}
+    - to:
+        - podSelector:
+            matchLabels: { app: {{ .to }} }
+      ports:
+        - port: {{ .port }}
+    {{- end }}
+{{- end }}

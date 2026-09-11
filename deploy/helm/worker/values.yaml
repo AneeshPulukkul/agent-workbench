@@ -1,0 +1,52 @@
+replicaCount: 2
+image:
+  repository: agent-workbench/worker
+  tag: "0.1.0"
+  pullPolicy: IfNotPresent
+service:
+  port: 8083
+  targetPort: 8083
+env:
+  APP_ENV: production
+  AUTH_MODE: oidc
+  LLM_MODE: router
+  LOG_LEVEL: info
+  WORKER_CONCURRENCY: "4"
+config:
+  otelEndpoint: http://otel-collector:4318
+  oidcIssuerUrl: ""
+  oidcAudience: ""
+resources:
+  requests: { cpu: 500m, memory: 512Mi }
+  limits: { cpu: "2", memory: 1Gi }
+probes:
+  livenessPath: /health
+  readinessPath: /ready
+  initialDelaySeconds: 15
+  periodSeconds: 20
+autoscaling:
+  enabled: true
+  minReplicas: 2
+  maxReplicas: 10
+  targetCPUUtilizationPercentage: 65
+  # Queue-depth autoscaling (recommended for prod — workers drain a PG queue,
+  # so CPU alone lags): e.g. Prometheus workbench_queue_depth AverageValue.
+  customMetrics: []
+pdb:
+  enabled: true
+  minAvailable: 1
+serviceAccount:
+  create: true
+  name: agent-worker
+  annotations: {}
+networkPolicy:
+  enabled: true
+  ingressNamespace: ingress-nginx
+  ingressFrom: []
+  egressTo:
+    - to: postgres
+      port: 5432
+    - to: otel-collector
+      port: 4318
+    - to: mcp-server
+      port: 8081

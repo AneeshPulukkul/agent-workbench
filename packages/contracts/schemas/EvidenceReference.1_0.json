@@ -1,0 +1,104 @@
+{
+  "$defs": {
+    "EvidenceKind": {
+      "enum": [
+        "metric",
+        "log",
+        "trace",
+        "doc",
+        "runbook",
+        "agent"
+      ],
+      "title": "EvidenceKind",
+      "type": "string"
+    }
+  },
+  "additionalProperties": false,
+  "description": "Pointer to redacted evidence. Raw content lives behind audit policy only.",
+  "properties": {
+    "schema_version": {
+      "const": "1.0",
+      "default": "1.0",
+      "title": "Schema Version",
+      "type": "string"
+    },
+    "ref_id": {
+      "maxLength": 128,
+      "minLength": 1,
+      "pattern": "^[A-Za-z0-9._-]+$",
+      "title": "Ref Id",
+      "type": "string"
+    },
+    "kind": {
+      "$ref": "#/$defs/EvidenceKind"
+    },
+    "uri": {
+      "maxLength": 2048,
+      "minLength": 1,
+      "title": "Uri",
+      "type": "string"
+    },
+    "excerpt_hash": {
+      "anyOf": [
+        {
+          "maxLength": 256,
+          "minLength": 1,
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Excerpt Hash"
+    },
+    "span_ref": {
+      "anyOf": [
+        {
+          "maxLength": 256,
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Span Ref"
+    },
+    "run_id": {
+      "anyOf": [
+        {
+          "maxLength": 128,
+          "minLength": 1,
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Run Id"
+    },
+    "tenant_id": {
+      "anyOf": [
+        {
+          "maxLength": 128,
+          "minLength": 1,
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Tenant Id"
+    }
+  },
+  "required": [
+    "ref_id",
+    "kind",
+    "uri"
+  ],
+  "title": "EvidenceReference",
+  "type": "object"
+}

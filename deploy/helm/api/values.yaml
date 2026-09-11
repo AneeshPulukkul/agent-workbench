@@ -1,0 +1,65 @@
+# Agent API values (Spec §11.2). Mock defaults; override per env.
+replicaCount: 2
+image:
+  repository: agent-workbench/api
+  tag: "0.1.0"
+  pullPolicy: IfNotPresent
+service:
+  port: 8080
+  targetPort: 8080
+env:
+  APP_ENV: production
+  AUTH_MODE: oidc
+  LLM_MODE: router
+  LOG_LEVEL: info
+config:
+  otelEndpoint: http://otel-collector:4318
+  oidcIssuerUrl: ""
+  oidcAudience: ""
+resources:
+  requests: { cpu: 250m, memory: 256Mi }
+  limits: { cpu: "1", memory: 512Mi }
+probes:
+  livenessPath: /health
+  readinessPath: /ready
+  initialDelaySeconds: 10
+  periodSeconds: 15
+autoscaling:
+  enabled: true
+  minReplicas: 2
+  maxReplicas: 8
+  targetCPUUtilizationPercentage: 70
+  # Queue-depth autoscaling (recommended for prod): add a Prometheus-backed
+  # external metric, e.g.
+  # customMetrics:
+  #   - type: Pods
+  #     pods: { metric: { name: workbench_queue_depth }, target: { type: AverageValue, averageValue: 50 } }
+  customMetrics: []
+pdb:
+  enabled: true
+  minAvailable: 1
+serviceAccount:
+  create: true
+  name: agent-api
+  annotations: {}
+networkPolicy:
+  enabled: true
+  # Ingress is deny-by-default; only the ingress controller + listed
+  # in-namespace callers may reach the API. Extend via ingressFrom.
+  ingressNamespace: ingress-nginx
+  ingressFrom: []
+  # Egress allowlist: DNS, postgres, OTLP, MCP, A2A only (SSRF guard).
+  egressTo:
+    - to: postgres
+      port: 5432
+    - to: otel-collector
+      port: 4318
+    - to: mcp-server
+      port: 8081
+podSecurity:
+  runAsNonRoot: true
+  runAsUser: 65532
+  runAsGroup: 65532
+  fsGroup: 65532
+  readOnlyRootFilesystem: true
+  allowPrivilegeEscalation: false
