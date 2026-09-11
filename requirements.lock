@@ -21,7 +21,7 @@ opentelemetry-exporter-otlp==1.29.0
 opentelemetry-instrumentation-fastapi==0.48b0
 httpx==0.28.1
 sse-starlette==2.2.1
-tenacity==9.0.2
+tenacity==8.5.0
 structlog==24.4.0
 # dev/test
 pytest==8.3.4
