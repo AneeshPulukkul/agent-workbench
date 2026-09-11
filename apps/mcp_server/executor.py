@@ -4,19 +4,19 @@ from __future__ import annotations
 
 import asyncio
 import uuid
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from typing import Any
 
 import structlog
 from opentelemetry import trace
 from pydantic import ValidationError
 
-from packages.contracts.tools import AuthorizationDecision, ToolInvocation, ToolInvocationStatus
 from apps.mcp_server.catalog import TOOL_METADATA, WRITE_TOOLS
 from apps.mcp_server.models import INPUT_MODELS
 from apps.mcp_server.redact import output_too_large, redact, redact_for_audit, sha256_hex
 from apps.mcp_server.security import AuthContext, ForbiddenError, check_tenant
 from apps.mcp_server.store import AUDIT_LOG, IDEMPOTENCY_STORE, INJECTED_DELAYS
+from packages.contracts.tools import AuthorizationDecision, ToolInvocation, ToolInvocationStatus
 
 log = structlog.get_logger(__name__)
 tracer = trace.get_tracer("agent-mcp-server")
@@ -67,7 +67,7 @@ def _persist_audit_record(
         except Exception:
             return
     try:
-        write_audit = getattr(repo, "write_audit")
+        write_audit = getattr(repo, "write_audit")  # noqa: B009 -- duck-typed repo, attr may not exist
         # run_id is ephemeral for ad-hoc tool calls (no runs row), so store
         # with run_id=None and carry run/invocation ids in the redacted
         # decision payload. audit_records.redacted decision keeps redaction.
@@ -115,7 +115,7 @@ class MCPToolError(Exception):
 
 
 def _iso_now() -> str:
-    return datetime.now(timezone.utc).isoformat()
+    return datetime.now(UTC).isoformat()
 
 
 async def _maybe_delay(tool: str) -> None:
@@ -131,9 +131,7 @@ async def _h_query_metrics(args: dict[str, Any]) -> dict[str, Any]:
         "metric": args["metric"],
         "aggregation": args.get("aggregation", "average"),
         "window": {"start": str(args["start_time"]), "end": str(args["end_time"])},
-        "points": [
-            {"t": f"2026-09-11T12:0{i}:00Z", "v": 90.0 + i} for i in range(5)
-        ],
+        "points": [{"t": f"2026-09-11T12:0{i}:00Z", "v": 90.0 + i} for i in range(5)],
         "mode": "mock",
     }
 
@@ -288,7 +286,7 @@ async def execute_tool(
     meta = TOOL_METADATA.get(tool_name)
     if meta is None:
         raise MCPToolError("not_found", f"unknown tool {tool_name}")
-    started = datetime.now(timezone.utc)
+    started = datetime.now(UTC)
     invocation_id = _new_id("inv")
     eff_run_id = run_id or _new_id("run")
     redacted_in = redact(raw_args)
@@ -319,7 +317,7 @@ async def execute_tool(
                 idempotency_key=key if tool_name in WRITE_TOOLS else None,
                 dry_run=dry_run if tool_name in WRITE_TOOLS else False,
                 started_at=started,
-                completed_at=datetime.now(timezone.utc),
+                completed_at=datetime.now(UTC),
                 trace_id=trace_id,
                 error=error,
             )
@@ -361,7 +359,8 @@ async def execute_tool(
                 parsed = model(**raw_args)
             except ValidationError as e:
                 raise MCPToolError(
-                    "validation_error", f"invalid input: {e.errors()[0]['msg']}",
+                    "validation_error",
+                    f"invalid input: {e.errors()[0]['msg']}",
                     details={"errors": e.errors()[:5]},
                 ) from e
             args = parsed.model_dump(mode="json")
@@ -378,14 +377,16 @@ async def execute_tool(
                 decision = AuthorizationDecision.ALLOWED
                 if not dry_run and not key:
                     raise MCPToolError(
-                        "validation_error", "idempotency_key required when dry_run=false",
+                        "validation_error",
+                        "idempotency_key required when dry_run=false",
                     )
                 if key:
                     seen = IDEMPOTENCY_STORE.get(f"{tool_name}:{key}")
                     if seen is not None:
                         if seen["input_hash"] != input_hash:
                             raise MCPToolError(
-                                "conflict", "idempotency key already used with different input",
+                                "conflict",
+                                "idempotency key already used with different input",
                             )
                         result = dict(seen["result"])  # type: ignore[arg-type]
                         result["deduplicated"] = True
@@ -396,7 +397,7 @@ async def execute_tool(
             timeout = timeout_override if timeout_override is not None else meta.timeout_seconds
             try:
                 result = await asyncio.wait_for(HANDLERS[tool_name](args), timeout)
-            except asyncio.TimeoutError as e:
+            except TimeoutError as e:
                 status = ToolInvocationStatus.TIMEOUT
                 raise MCPToolError("timeout", f"{tool_name} timed out after {timeout}s") from e
 
@@ -428,8 +429,8 @@ async def execute_tool(
 
 
 __all__ = [
-    "MCPToolError",
     "HANDLERS",
+    "MCPToolError",
     "execute_tool",
     "get_audit_repository",
     "set_audit_repository",

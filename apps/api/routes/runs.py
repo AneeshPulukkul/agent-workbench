@@ -11,6 +11,7 @@ propagates to worker/A2A.
 
 from __future__ import annotations
 
+import contextlib
 import json
 import uuid
 from typing import Any
@@ -184,24 +185,20 @@ def _execute_run(run_id: str, tenant_id: str) -> None:
             limits=state.limits,
         )
     )
-    try:
+    with contextlib.suppress(Exception):
         graph.run(state)
-    except Exception:
-        pass
 
 
 def _run_detail(run_id: str, tenant_id: str) -> dict[str, object]:
     repo = get_repository()
     try:
         row = repo.get_run(run_id, tenant_id)
-    except NotFoundError:
-        raise HTTPException(status_code=404, detail=_envelope("not_found", "not found"))
+    except NotFoundError as e:
+        raise HTTPException(status_code=404, detail=_envelope("not_found", "not found")) from e
     try:
-        approvals = [
-            a.model_dump(mode="json") for a in repo.list_approvals(run_id, tenant_id)
-        ]
-    except NotFoundError:
-        raise HTTPException(status_code=404, detail=_envelope("not_found", "not found"))
+        approvals = [a.model_dump(mode="json") for a in repo.list_approvals(run_id, tenant_id)]
+    except NotFoundError as e:
+        raise HTTPException(status_code=404, detail=_envelope("not_found", "not found")) from e
     state = RUN_STATES.get(run_id)
     if state is not None:
         findings = [dict(f) for f in list(getattr(state, "findings", []) or [])]
@@ -247,42 +244,34 @@ def _findings_from_events(run_id: str, tenant_id: str) -> tuple[list[dict], list
 
 
 @router.get("/runs/{run_id}")
-def get_run(
-    run_id: str, identity: Identity = Depends(get_identity)
-) -> dict[str, object]:
+def get_run(run_id: str, identity: Identity = Depends(get_identity)) -> dict[str, object]:
     require_scopes(identity, ["case.read"])
     return _run_detail(run_id, identity.tenant_id)
 
 
 @router.post("/runs/{run_id}/cancel", status_code=202)
-def cancel_run(
-    run_id: str, identity: Identity = Depends(get_identity)
-) -> dict[str, str]:
+def cancel_run(run_id: str, identity: Identity = Depends(get_identity)) -> dict[str, str]:
     require_scopes(identity, ["case.write"])
     repo = get_repository()
     try:
         row = repo.get_run(run_id, identity.tenant_id)
-    except NotFoundError:
-        raise HTTPException(status_code=404, detail=_envelope("not_found", "not found"))
+    except NotFoundError as e:
+        raise HTTPException(status_code=404, detail=_envelope("not_found", "not found")) from e
     if row.status != "cancelled":
         repo.update_run(run_id, identity.tenant_id, status="cancelled")
-        try:
+        with contextlib.suppress(NotFoundError, ConflictError):
             repo.append_next_event(
                 run_id=run_id,
                 tenant_id=identity.tenant_id,
                 type=EventType.RUN_CANCELLED,
                 data={"reason": "cancel requested"},
             )
-        except (NotFoundError, ConflictError):
-            pass
     # Propagate to worker/A2A (in-process hook + durable flag).
     request_cancel(run_id)
     cached = RUN_STATES.get(run_id)
     if cached is not None:
-        try:
+        with contextlib.suppress(Exception):
             cached.status = "cancelled"
-        except Exception:
-            pass
     try:
         from apps.worker.worker import propagate_cancel as _propagate
 
@@ -304,8 +293,8 @@ def run_events(
     repo = get_repository()
     try:
         repo.get_run(run_id, identity.tenant_id)
-    except NotFoundError:
-        raise HTTPException(status_code=404, detail=_envelope("not_found", "not found"))
+    except NotFoundError as e:
+        raise HTTPException(status_code=404, detail=_envelope("not_found", "not found")) from e
     effective_after = after_sequence
     header_val = last_event_id or request.headers.get("last-event-id")
     if after_sequence == 0 and header_val:
@@ -317,8 +306,8 @@ def run_events(
                 effective_after = seq
     try:
         events = repo.list_events(run_id, identity.tenant_id, after_sequence=effective_after)
-    except NotFoundError:
-        raise HTTPException(status_code=404, detail=_envelope("not_found", "not found"))
+    except NotFoundError as e:
+        raise HTTPException(status_code=404, detail=_envelope("not_found", "not found")) from e
     payload = [e.model_dump(mode="json") for e in events]
     accept = request.headers.get("accept", "")
     if "text/event-stream" in accept:
@@ -326,9 +315,7 @@ def run_events(
     return {"run_id": run_id, "after_sequence": effective_after, "events": payload}
 
 
-def _sequence_for_event_id(
-    repo: Any, run_id: str, tenant_id: str, event_id: str
-) -> int | None:
+def _sequence_for_event_id(repo: Any, run_id: str, tenant_id: str, event_id: str) -> int | None:
     try:
         events = repo.list_events(run_id, tenant_id)
     except Exception:

@@ -116,12 +116,12 @@ def redact_for_audit(payload: Any, limit_bytes: int = OUTPUT_MAX_BYTES) -> Any:
 
 
 __all__ = [
-    "SENSITIVE_KEYS",
-    "REDACTED",
-    "PII_RE",
     "OUTPUT_MAX_BYTES",
+    "PII_RE",
+    "REDACTED",
+    "SENSITIVE_KEYS",
+    "output_too_large",
     "redact",
     "redact_for_audit",
     "sha256_hex",
-    "output_too_large",
 ]

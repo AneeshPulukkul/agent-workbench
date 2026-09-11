@@ -17,6 +17,7 @@ the in-process counters for assertions.
 
 from __future__ import annotations
 
+import contextlib
 import os
 import threading
 from typing import Any
@@ -118,10 +119,8 @@ def _add_counter(name: str, value: float, attrs: dict | None, description: str =
         _local_counts[key] = _local_counts.get(key, 0.0) + value
     inst = _counter(name, description)
     if inst is not None:
-        try:
+        with contextlib.suppress(Exception):
             inst.add(value, attrs or {})
-        except Exception:
-            pass
 
 
 def _record_hist(
@@ -131,10 +130,8 @@ def _record_hist(
         _local_hist_values.setdefault(name, []).append(value)
     inst = _histogram(name, description, unit)
     if inst is not None:
-        try:
+        with contextlib.suppress(Exception):
             inst.record(value, attrs or {})
-        except Exception:
-            pass
 
 
 # ---------------------------------------------------------------------------
@@ -219,18 +216,18 @@ def reset_for_tests() -> None:
 
 
 __all__ = [
-    "is_available",
     "init_metrics",
-    "record_run_started",
-    "record_run_finished",
-    "record_run_duration",
-    "record_model_call",
-    "record_tool_call",
+    "is_available",
     "record_a2a_call",
-    "record_policy_decision",
     "record_approval_wait",
-    "record_sse_reconnect",
     "record_budget_exhausted",
-    "snapshot",
+    "record_model_call",
+    "record_policy_decision",
+    "record_run_duration",
+    "record_run_finished",
+    "record_run_started",
+    "record_sse_reconnect",
+    "record_tool_call",
     "reset_for_tests",
+    "snapshot",
 ]

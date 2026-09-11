@@ -15,13 +15,12 @@ from __future__ import annotations
 import functools
 import time
 from collections.abc import Callable
-from contextlib import contextmanager
+from contextlib import contextmanager, suppress
 from typing import Any
 
 from . import conventions as conventions
 from . import metrics as metrics
 from . import tracing as tracing
-
 
 # ---------------------------------------------------------------------------
 # API (FastAPI)
@@ -38,10 +37,8 @@ def instrument_api(app: Any, service_name: str = "agent-api") -> Any:
     try:
         from opentelemetry.instrumentation.fastapi import FastAPIInstrumentor
 
-        try:
+        with suppress(Exception):
             FastAPIInstrumentor().instrument_app(app)
-        except Exception:
-            pass
     except ImportError:
         pass
 
@@ -90,10 +87,8 @@ def instrument_run(run_id: str, tenant_id: str | None = None):
             metrics.record_run_finished("failed")
             raise
         finally:
-            try:
+            with suppress(Exception):
                 metrics.record_run_duration(time.monotonic() - started, "run")
-            except Exception:
-                pass
 
 
 @contextmanager
@@ -137,10 +132,8 @@ def instrument_model_call(
     ) as s:
         yield s
     elapsed = time.monotonic() - started
-    try:
+    with suppress(Exception):
         s.set_attribute("workbench.model.latency_s", round(elapsed, 4))  # type: ignore[union-attr]
-    except Exception:
-        pass
 
 
 def record_model_usage(
@@ -173,10 +166,8 @@ def instrument_mcp_tool(
             status = "failed"
             raise
         finally:
-            try:
+            with suppress(Exception):
                 metrics.record_tool_call(tool_name, status, time.monotonic() - started)
-            except Exception:
-                pass
 
 
 def trace_mcp_invoke(fn: Callable) -> Callable:
@@ -226,10 +217,8 @@ def instrument_a2a_task(
             status = "timeout" if isinstance(exc, TimeoutError) else "failed"
             raise
         finally:
-            try:
+            with suppress(Exception):
                 metrics.record_a2a_call(agent_name or "unknown", status, time.monotonic() - started)
-            except Exception:
-                pass
 
 
 # ---------------------------------------------------------------------------
@@ -262,10 +251,8 @@ def instrument_approval_wait(approval_id: str, *, run_id: str | None = None):
     started = time.monotonic()
     with tracing.approval_wait_span(approval_id, run_id=run_id):
         yield
-    try:
+    with suppress(Exception):
         metrics.record_approval_wait(time.monotonic() - started)
-    except Exception:
-        pass
 
 
 # ---------------------------------------------------------------------------
@@ -281,19 +268,19 @@ def instrument_db(op: str, table: str, *, run_id: str | None = None):
 
 __all__ = [
     "conventions",
-    "metrics",
-    "tracing",
+    "instrument_a2a_task",
     "instrument_api",
+    "instrument_approval_wait",
+    "instrument_db",
+    "instrument_mcp_tool",
+    "instrument_model_call",
+    "instrument_policy_check",
     "instrument_run",
     "instrument_workflow_step",
     "instrumented_step",
-    "instrument_model_call",
+    "metrics",
     "record_model_usage",
-    "instrument_mcp_tool",
-    "trace_mcp_invoke",
-    "instrument_a2a_task",
-    "instrument_policy_check",
     "record_policy_outcome",
-    "instrument_approval_wait",
-    "instrument_db",
+    "trace_mcp_invoke",
+    "tracing",
 ]

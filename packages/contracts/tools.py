@@ -46,7 +46,9 @@ class ToolMetadata(BaseModel):
 
     schema_version: Literal["1.0"] = SCHEMA_VERSION
     name: str = Field(
-        min_length=1, max_length=128, pattern=r"^[a-z0-9_]+\.[a-z0-9_]+$",
+        min_length=1,
+        max_length=128,
+        pattern=r"^[a-z0-9_]+\.[a-z0-9_]+$",
         description="Namespaced tool name, e.g. telemetry.query_metrics.",
     )
     description: str = Field(min_length=1, max_length=2000)
@@ -61,17 +63,24 @@ class ToolMetadata(BaseModel):
     version: str = Field(min_length=1, max_length=32, pattern=r"^\d+\.\d+\.\d+$")
 
     @model_validator(mode="after")
-    def _category_policy(self) -> "ToolMetadata":
-        if self.category in (ToolCategory.WRITE, ToolCategory.DESTRUCTIVE) and not self.approval_required:
+    def _category_policy(self) -> ToolMetadata:
+        if (
+            self.category in (ToolCategory.WRITE, ToolCategory.DESTRUCTIVE)
+            and not self.approval_required
+        ):
             raise ValueError("write/destructive tools must require approval")
         if self.category == ToolCategory.READ and self.side_effect != SideEffect.NONE:
             raise ValueError("read tools must have side_effect=none")
         if self.side_effect == SideEffect.DESTRUCTIVE and self.category != ToolCategory.DESTRUCTIVE:
             raise ValueError("destructive side_effect requires category=destructive")
         if self.side_effect == SideEffect.EXTERNAL_WRITE and self.category not in (
-            ToolCategory.WRITE, ToolCategory.DESTRUCTIVE, ToolCategory.ANALYSIS,
+            ToolCategory.WRITE,
+            ToolCategory.DESTRUCTIVE,
+            ToolCategory.ANALYSIS,
         ):
-            raise ValueError("external_write side_effect requires write/destructive/analysis category")
+            raise ValueError(
+                "external_write side_effect requires write/destructive/analysis category"
+            )
         return self
 
 
@@ -100,23 +109,29 @@ class ToolInvocation(BaseModel):
     error: dict[str, Any] | None = None
 
     @model_validator(mode="after")
-    def _completed_after_started(self) -> "ToolInvocation":
+    def _completed_after_started(self) -> ToolInvocation:
         if self.completed_at is not None and self.completed_at < self.started_at:
             raise ValueError("completed_at must be >= started_at")
-        if self.status in (
-            ToolInvocationStatus.SUCCEEDED, ToolInvocationStatus.FAILED,
-            ToolInvocationStatus.TIMEOUT, ToolInvocationStatus.CANCELLED,
-        ) and self.completed_at is None:
+        if (
+            self.status
+            in (
+                ToolInvocationStatus.SUCCEEDED,
+                ToolInvocationStatus.FAILED,
+                ToolInvocationStatus.TIMEOUT,
+                ToolInvocationStatus.CANCELLED,
+            )
+            and self.completed_at is None
+        ):
             raise ValueError("terminal invocations require completed_at")
         return self
 
 
 __all__ = [
     "SCHEMA_VERSION",
-    "ToolCategory",
-    "SideEffect",
-    "ToolInvocationStatus",
     "AuthorizationDecision",
-    "ToolMetadata",
+    "SideEffect",
+    "ToolCategory",
     "ToolInvocation",
+    "ToolInvocationStatus",
+    "ToolMetadata",
 ]

@@ -66,7 +66,7 @@ class A2ATaskResult(BaseModel):
     correlation_id: str | None = Field(default=None, max_length=128)
 
     @model_validator(mode="after")
-    def _status_payload_consistency(self) -> "A2ATaskResult":
+    def _status_payload_consistency(self) -> A2ATaskResult:
         if self.status == A2ATaskStatus.COMPLETED and self.error is not None:
             raise ValueError("completed results must not carry error")
         if self.status in (A2ATaskStatus.FAILED, A2ATaskStatus.TIMEOUT) and self.error is None:
@@ -108,11 +108,11 @@ class AgentCard(BaseModel):
 
 __all__ = [
     "SCHEMA_VERSION",
-    "A2ATaskStatus",
-    "A2ATaskRequest",
     "A2ATaskError",
+    "A2ATaskRequest",
     "A2ATaskResult",
-    "AgentSkill",
+    "A2ATaskStatus",
     "AgentAuthentication",
     "AgentCard",
+    "AgentSkill",
 ]

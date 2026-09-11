@@ -70,9 +70,7 @@ def test_create_get_events_replay(client: TestClient) -> None:
         headers={"Last-Event-ID": str(seqs[0])},
     )
     assert replay.status_code == 200
-    assert [e["sequence"] for e in replay.json()["events"]] == [
-        e["sequence"] for e in tail_events
-    ]
+    assert [e["sequence"] for e in replay.json()["events"]] == [e["sequence"] for e in tail_events]
 
 
 def test_idempotent_create_same_key(client: TestClient) -> None:

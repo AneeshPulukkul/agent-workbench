@@ -7,6 +7,8 @@ and returns 409 on double-decide via ``ApprovalStore``.
 
 from __future__ import annotations
 
+import contextlib
+
 from fastapi import APIRouter, Depends, Header
 from fastapi.exceptions import HTTPException
 from pydantic import BaseModel, Field
@@ -41,15 +43,13 @@ def _envelope(code: str, message: str) -> dict[str, object]:
 
 
 @router.get("/runs/{run_id}/approvals")
-def list_approvals(
-    run_id: str, identity: Identity = Depends(get_identity)
-) -> dict[str, object]:
+def list_approvals(run_id: str, identity: Identity = Depends(get_identity)) -> dict[str, object]:
     require_scopes(identity, ["case.read"])
     repo = get_repository()
     try:
         rows = repo.list_approvals(run_id, identity.tenant_id)
-    except NotFoundError:
-        raise HTTPException(status_code=404, detail=_envelope("not_found", "not found"))
+    except NotFoundError as e:
+        raise HTTPException(status_code=404, detail=_envelope("not_found", "not found")) from e
     return {"run_id": run_id, "approvals": [a.model_dump(mode="json") for a in rows]}
 
 
@@ -91,8 +91,8 @@ def decide(
     repo = get_repository()
     try:
         repo.get_run(run_id, identity.tenant_id)
-    except NotFoundError:
-        raise HTTPException(status_code=404, detail=_envelope("not_found", "not found"))
+    except NotFoundError as e:
+        raise HTTPException(status_code=404, detail=_envelope("not_found", "not found")) from e
     try:
         decided = repo.decide_approval(
             approval_id=approval_id,
@@ -101,16 +101,16 @@ def decide(
             approver=body.approver,
             reason=body.reason,
         )
-    except NotFoundError:
-        raise HTTPException(status_code=404, detail=_envelope("not_found", "not found"))
+    except NotFoundError as e:
+        raise HTTPException(status_code=404, detail=_envelope("not_found", "not found")) from e
     except ConflictError as e:
         msg = str(e).lower()
         code = "approval_expired" if "expir" in msg else "conflict"
-        raise HTTPException(status_code=409, detail=_envelope(code, str(e)))
+        raise HTTPException(status_code=409, detail=_envelope(code, str(e))) from e
     if decided.run_id != run_id:
         raise HTTPException(status_code=404, detail=_envelope("not_found", "not found"))
 
-    try:
+    with contextlib.suppress(NotFoundError, ConflictError):
         repo.append_next_event(
             run_id=run_id,
             tenant_id=identity.tenant_id,
@@ -121,8 +121,6 @@ def decide(
                 "approver": body.approver,
             },
         )
-    except (NotFoundError, ConflictError):
-        pass
 
     result: dict[str, object] = {
         "approval_id": approval_id,
@@ -182,7 +180,7 @@ def _maybe_resume(run_id: str, tenant_id: str, decision: str) -> None:
                 policy=FakePolicyClient(),
                 store=RepositoryStore(repo, run_id, tenant_id),  # type: ignore[arg-type]
                 model=FakeModelClient(),
-                limits=getattr(state, "limits"),
+                limits=state.limits,
             )
         )
         graph.run(state)

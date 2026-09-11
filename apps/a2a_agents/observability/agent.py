@@ -19,6 +19,7 @@ Guarantees:
 from __future__ import annotations
 
 import asyncio
+import contextlib
 import hashlib
 import re
 from datetime import UTC, datetime
@@ -434,7 +435,8 @@ def _persist_task(task_id: str, result: A2ATaskResult, request: A2ATaskRequest) 
         save = getattr(repo, "save_agent_task", None)
         update = getattr(repo, "update_agent_task", None)
         if save is not None:
-            try:
+            # e.g. missing runs row or duplicate task_id
+            with contextlib.suppress(Exception):
                 save(
                     task_id=task_id,
                     run_id=request.run_id or task_id,
@@ -446,21 +448,15 @@ def _persist_task(task_id: str, result: A2ATaskResult, request: A2ATaskRequest) 
                     raw_inputs=dict(request.inputs or {}),
                     deadline=getattr(request, "deadline", None),
                 )
-            except Exception:
-                pass  # e.g. missing runs row or duplicate task_id
         if update is not None and result.output is not None:
-            try:
+            with contextlib.suppress(Exception):
                 update(
                     task_id=task_id,
                     tenant_id=request.tenant_id or "",
                     status=str(result.status.value),
                     raw_output=dict(result.output or {}),
-                    error=dict(result.error.model_dump(mode="json"))
-                    if result.error
-                    else None,
+                    error=dict(result.error.model_dump(mode="json")) if result.error else None,
                 )
-            except Exception:
-                pass
     except Exception:
         pass
 
@@ -469,9 +465,7 @@ def _store_get(task_id: str) -> A2ATaskResult | None:
     return _TASKS.get(task_id)
 
 
-def _store_put(
-    task_id: str, result: A2ATaskResult, request: A2ATaskRequest | None = None
-) -> None:
+def _store_put(task_id: str, result: A2ATaskResult, request: A2ATaskRequest | None = None) -> None:
     _TASKS[task_id] = result
     if request is not None:
         _persist_task(task_id, result, request)
@@ -716,8 +710,9 @@ def cancel_task(task_id: str, raw_request: Request) -> A2ATaskResult:
             return existing  # already done; cancel is a no-op (idempotent)
     _CANCELLED.add(task_id)
     tenant = existing.tenant_id if existing is not None else caller_tenant
-    result = _error_result(task_id, A2ATaskStatus.CANCELLED, "cancelled", "task was cancelled",
-                           tenant_id=tenant)
+    result = _error_result(
+        task_id, A2ATaskStatus.CANCELLED, "cancelled", "task was cancelled", tenant_id=tenant
+    )
     if existing is not None:
         # Preserve the original task tenant on the cancel record.
         result = result.model_copy(update={"tenant_id": existing.tenant_id})

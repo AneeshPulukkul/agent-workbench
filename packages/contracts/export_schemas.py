@@ -119,7 +119,9 @@ def main(argv: list[str] | None = None) -> int:
             fresh = export_schemas(Path(tmp))
             for p in fresh:
                 current = out_dir / p.name
-                if not current.exists() or current.read_text(encoding="utf-8") != p.read_text(encoding="utf-8"):
+                if not current.exists() or current.read_text(encoding="utf-8") != p.read_text(
+                    encoding="utf-8"
+                ):
                     print(f"STALE: {current}", file=sys.stderr)
                     return 1
         print("schemas up to date")

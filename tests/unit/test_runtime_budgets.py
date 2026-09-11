@@ -40,8 +40,11 @@ def test_router_from_env(monkeypatch):
 
 
 def test_budget_model_calls_enforced():
-    t = BudgetTracker(BudgetLimits(max_model_calls=2, max_cost_usd=1000.0,
-                                   max_input_tokens=10**9, max_output_tokens=10**9))
+    t = BudgetTracker(
+        BudgetLimits(
+            max_model_calls=2, max_cost_usd=1000.0, max_input_tokens=10**9, max_output_tokens=10**9
+        )
+    )
     t.record_model(input_tokens=10, output_tokens=5, cost_usd=0.01)
     t.record_model(input_tokens=10, output_tokens=5, cost_usd=0.01)
     with pytest.raises(BudgetExceeded):
@@ -49,9 +52,16 @@ def test_budget_model_calls_enforced():
 
 
 def test_budget_tool_cost_token_delegation_duration():
-    t = BudgetTracker(BudgetLimits(max_tool_calls=1, max_cost_usd=1.0,
-                                   max_input_tokens=100, max_output_tokens=100,
-                                   max_delegation_depth=1, max_duration_s=3600.0))
+    t = BudgetTracker(
+        BudgetLimits(
+            max_tool_calls=1,
+            max_cost_usd=1.0,
+            max_input_tokens=100,
+            max_output_tokens=100,
+            max_delegation_depth=1,
+            max_duration_s=3600.0,
+        )
+    )
     t.record_tool()
     with pytest.raises(BudgetExceeded):
         t.record_tool()
@@ -72,8 +82,14 @@ def test_budget_tool_cost_token_delegation_duration():
 
 def test_budget_from_dict_seeds_consumed():
     t = BudgetTracker.from_budget_dict(
-        {"max_model_calls": 5, "max_tool_calls": 5, "max_cost_usd": 2.0,
-         "consumed_model_calls": 4, "consumed_tool_calls": 1, "consumed_cost_usd": 0.5}
+        {
+            "max_model_calls": 5,
+            "max_tool_calls": 5,
+            "max_cost_usd": 2.0,
+            "consumed_model_calls": 4,
+            "consumed_tool_calls": 1,
+            "consumed_cost_usd": 0.5,
+        }
     )
     snap = t.snapshot()
     assert snap.model_calls == 4 and snap.tool_calls == 1
@@ -84,7 +100,8 @@ def test_structured_validation_rejects_bad():
     with pytest.raises(ModelValidationError):
         validate_structured({"category": "x"}, Classification)  # missing confidence
     ok = validate_structured(
-        {"category": "incident", "confidence": 0.9, "reasoning": "r"}, Classification)
+        {"category": "incident", "confidence": 0.9, "reasoning": "r"}, Classification
+    )
     assert ok.category == "incident"
 
 
@@ -104,6 +121,7 @@ def test_fake_runtime_deterministic():
         assert len(s) <= 500
         snap = rt.tracker.snapshot()
         assert snap.model_calls == 5  # classify x2 + plan x2 + synthesize... wait summarize too
+
     # classify x2, plan x2, synthesize x1, summarize x1 = 6
     async def go2():
         rt = FakeRuntime()
@@ -114,14 +132,24 @@ def test_fake_runtime_deterministic():
         await rt.synthesize("obj", run_id="run_1", tenant_id="t1")
         await rt.summarize("x" * 2000)
         assert rt.tracker.snapshot().model_calls == 6
+
     asyncio.run(go2())
     # budget consumed
-    rt = FakeRuntime(tracker=BudgetTracker(BudgetLimits(
-        max_model_calls=1, max_cost_usd=100.0,
-        max_input_tokens=10**9, max_output_tokens=10**9)))
+    rt = FakeRuntime(
+        tracker=BudgetTracker(
+            BudgetLimits(
+                max_model_calls=1,
+                max_cost_usd=100.0,
+                max_input_tokens=10**9,
+                max_output_tokens=10**9,
+            )
+        )
+    )
+
     async def over():
         await rt.classify("error rate spike")
         await rt.classify("error rate spike")
+
     with pytest.raises(BudgetExceeded):
         asyncio.run(over())
 
@@ -147,8 +175,9 @@ def test_retry_reads_until_success():
             raise ConnectionError("transient")
         return "ok"
 
-    out = asyncio.run(call_with_retry(
-        flaky, max_retries=3, timeout_s=2.0, is_write=False, base_backoff_s=0.001))
+    out = asyncio.run(
+        call_with_retry(flaky, max_retries=3, timeout_s=2.0, is_write=False, base_backoff_s=0.001)
+    )
     assert out == "ok" and attempts["n"] == 3
 
 
@@ -168,4 +197,5 @@ def test_cancellation_propagates():
             await rt.classify("error spike", cancellation=ev)
         with pytest.raises(asyncio.CancelledError):
             await rt.summarize("hello", cancellation=ev)
+
     asyncio.run(go())

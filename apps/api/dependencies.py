@@ -48,7 +48,7 @@ def get_user_id(
 
 
 def require_scope(*scopes: str):  # type: ignore[no-untyped-def]
-    def _guard(identity: Identity = Depends(get_identity)) -> Identity:  # noqa: B008
+    def _guard(identity: Identity = Depends(get_identity)) -> Identity:
         require_scopes(identity, list(scopes))
         return identity
 

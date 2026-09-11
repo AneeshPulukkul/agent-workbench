@@ -10,8 +10,9 @@ Singletons here are process-local and safe for tests via
 
 from __future__ import annotations
 
+import contextlib
 import os
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 from typing import Any
 
 from sqlalchemy.orm import sessionmaker
@@ -55,9 +56,7 @@ def get_repository() -> SqlAlchemyRepository:
     except Exception:
         _ENGINE = get_engine("sqlite:///:memory:")
         create_all(_ENGINE)
-    _REPO = SqlAlchemyRepository(
-        sessionmaker(bind=_ENGINE, expire_on_commit=False)
-    )
+    _REPO = SqlAlchemyRepository(sessionmaker(bind=_ENGINE, expire_on_commit=False))
     return _REPO
 
 
@@ -67,9 +66,7 @@ def reset_repository(database_url: str = "sqlite:///:memory:") -> SqlAlchemyRepo
     _ENGINE = get_engine(database_url)
     Base.metadata.drop_all(_ENGINE)
     Base.metadata.create_all(_ENGINE)
-    _REPO = SqlAlchemyRepository(
-        sessionmaker(bind=_ENGINE, expire_on_commit=False)
-    )
+    _REPO = SqlAlchemyRepository(sessionmaker(bind=_ENGINE, expire_on_commit=False))
     RUN_STATES.clear()
     CANCEL_FLAGS.clear()
     DECIDE_IDEMPOTENCY.clear()
@@ -82,10 +79,8 @@ def request_cancel(run_id: str) -> None:
     CANCEL_FLAGS.add(run_id)
     state = RUN_STATES.get(run_id)
     if state is not None:
-        try:
+        with contextlib.suppress(Exception):
             state.cancelled = True
-        except Exception:
-            pass
     task_id = f"{run_id}-obs-1"
     if task_id not in A2A_CANCELLED:
         A2A_CANCELLED.append(task_id)
@@ -113,7 +108,7 @@ class RepositoryStore:
             "consumed_model_calls": int(getattr(getattr(state, "usage", None), "model_calls", 0)),
             "consumed_cost_usd": float(getattr(getattr(state, "usage", None), "cost_usd", 0.0)),
         }
-        try:
+        with contextlib.suppress(Exception):
             self._repo.update_run(
                 self._run_id,
                 self._tenant_id,
@@ -121,14 +116,10 @@ class RepositoryStore:
                 current_state=str(getattr(state, "current_state", "")),
                 budget_json=budget,
             )
-        except Exception:
-            pass
         # Upsert approvals so human gate rows are durable after every transition.
         for ap in list(getattr(state, "approvals", []) or []):
-            try:
+            with contextlib.suppress(Exception):
                 self._upsert_approval(ap, state)
-            except Exception:
-                pass
 
     def append(self, event: dict[str, Any]) -> None:
         etype = str(event.get("type", "message.delta"))
@@ -174,24 +165,22 @@ class RepositoryStore:
             trace_id=getattr(state, "trace_id", None),
             correlation_id=getattr(state, "correlation_id", None),
         )
-        try:
+        with contextlib.suppress(ConflictError):
             self._repo.create_approval(approval)
-        except ConflictError:
-            pass
 
 
 def _now() -> datetime:
-    return datetime.now(timezone.utc)
+    return datetime.now(UTC)
 
 
 def _parse_dt(v: Any) -> datetime | None:
     if v is None:
         return None
     if isinstance(v, datetime):
-        return v if v.tzinfo is not None else v.replace(tzinfo=timezone.utc)
+        return v if v.tzinfo is not None else v.replace(tzinfo=UTC)
     try:
         dt = datetime.fromisoformat(str(v))
-        return dt if dt.tzinfo is not None else dt.replace(tzinfo=timezone.utc)
+        return dt if dt.tzinfo is not None else dt.replace(tzinfo=UTC)
     except Exception:
         return None
 

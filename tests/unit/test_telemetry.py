@@ -43,7 +43,7 @@ def test_genai_attrs_have_no_prompts():
 
 def test_spans_carry_run_id_and_hash(monkeypatch):
     monkeypatch.delenv("OTEL_CONTENT_CAPTURE", raising=False)
-    provider, exporter = tracing.init_tracing("test-svc", in_memory=True)
+    _provider, exporter = tracing.init_tracing("test-svc", in_memory=True)
     with tracing.mcp_tool_span("telemetry.query_metrics", run_id="run_1", side_effect="none"):
         pass
     with tracing.a2a_span("task_1", run_id="run_1", agent_name="obs"):

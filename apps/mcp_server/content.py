@@ -8,7 +8,10 @@ SERVICES: dict[str, dict[str, object]] = {
         "owner": "team-checkout",
         "tier": "tier-1",
         "slos": {"availability": 99.95, "p99_latency_ms": 450},
-        "links": {"dashboard": "https://example.invalid/d/checkout", "repo": "https://example.invalid/checkout"},
+        "links": {
+            "dashboard": "https://example.invalid/d/checkout",
+            "repo": "https://example.invalid/checkout",
+        },
         "tenant_id": "tenant_a",
     },
     "payments-api": {
@@ -95,4 +98,4 @@ def render_prompt(name: str, args: dict[str, str]) -> str:
     return filled
 
 
-__all__ = ["SERVICES", "RUNBOOKS", "PROMPTS", "get_service", "get_runbook", "render_prompt"]
+__all__ = ["PROMPTS", "RUNBOOKS", "SERVICES", "get_runbook", "get_service", "render_prompt"]

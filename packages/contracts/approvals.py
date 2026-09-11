@@ -40,12 +40,15 @@ class Approval(BaseModel):
     correlation_id: str | None = Field(default=None, max_length=128)
 
     @model_validator(mode="after")
-    def _decision_consistency(self) -> "Approval":
+    def _decision_consistency(self) -> Approval:
         terminal = (ApprovalDecision.APPROVED, ApprovalDecision.REJECTED, ApprovalDecision.EXPIRED)
         if self.decision in terminal:
             if self.decided_at is None:
                 raise ValueError("terminal approvals require decided_at")
-            if self.decision in (ApprovalDecision.APPROVED, ApprovalDecision.REJECTED) and not self.approver:
+            if (
+                self.decision in (ApprovalDecision.APPROVED, ApprovalDecision.REJECTED)
+                and not self.approver
+            ):
                 raise ValueError("approved/rejected decisions require approver")
             if self.decided_at < self.requested_at:
                 raise ValueError("decided_at must be >= requested_at")
@@ -93,7 +96,7 @@ class PolicyDecision(BaseModel):
     correlation_id: str | None = Field(default=None, max_length=128)
 
     @model_validator(mode="after")
-    def _deny_is_terminal(self) -> "PolicyDecision":
+    def _deny_is_terminal(self) -> PolicyDecision:
         if not self.allowed and self.requires_approval:
             raise ValueError("denied decisions must not require approval (deny is terminal)")
         return self
@@ -101,8 +104,8 @@ class PolicyDecision(BaseModel):
 
 __all__ = [
     "SCHEMA_VERSION",
-    "ApprovalDecision",
     "Approval",
+    "ApprovalDecision",
     "ApprovalDecisionRequest",
     "PolicyDecision",
 ]

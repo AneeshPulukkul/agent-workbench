@@ -15,7 +15,7 @@ from __future__ import annotations
 import os
 import time
 from collections.abc import Iterator
-from contextlib import contextmanager
+from contextlib import contextmanager, suppress
 from typing import Any
 
 from . import conventions as C
@@ -95,10 +95,9 @@ def init_tracing(
     elif enable_console or os.getenv("OTEL_TRACES_CONSOLE", "").lower() in ("1", "true"):
         provider.add_span_processor(BatchSpanProcessor(ConsoleSpanExporter()))
 
-    try:
+    # already set in this process (e.g. tests)
+    with suppress(Exception):
         trace.set_tracer_provider(provider)
-    except Exception:
-        pass  # already set in this process (e.g. tests)
     _initialized_for = service_name
     try:
         # Prefer the fresh provider's tracer so in_memory tests capture spans
@@ -163,10 +162,8 @@ def inject_headers(carrier: dict | None = None) -> dict:
     carrier = {} if carrier is None else carrier
     if not _OTEL_AVAILABLE or propagate is None:
         return carrier
-    try:
+    with suppress(Exception):
         propagate.inject(carrier)
-    except Exception:
-        pass
     return carrier
 
 
@@ -238,17 +235,13 @@ def span(
 
 
 def _status_ok(span_obj: Any) -> None:
-    try:
+    with suppress(Exception):
         span_obj.set_status(Status(StatusCode.OK))  # type: ignore[union-attr]
-    except Exception:
-        pass
 
 
 def _status_error(span_obj: Any, message: str) -> None:
-    try:
+    with suppress(Exception):
         span_obj.set_status(Status(StatusCode.ERROR, C.scrub_message(message)))  # type: ignore[union-attr]
-    except Exception:
-        pass
 
 
 # ---------------------------------------------------------------------------
@@ -327,10 +320,8 @@ def mcp_tool_span(
             _status_error(s, str(exc))
             raise
         finally:
-            try:
+            with suppress(Exception):
                 s.set_attribute("workbench.tool.latency_s", round(time.monotonic() - started, 4))
-            except Exception:
-                pass
 
 
 @contextmanager
@@ -355,10 +346,8 @@ def a2a_span(
             _status_error(s, str(exc))
             raise
         finally:
-            try:
+            with suppress(Exception):
                 s.set_attribute("workbench.a2a.latency_s", round(time.monotonic() - started, 4))
-            except Exception:
-                pass
 
 
 @contextmanager
@@ -408,21 +397,21 @@ def http_server_span(
 
 
 __all__ = [
-    "is_available",
-    "init_tracing",
-    "get_tracer",
-    "inject_headers",
-    "extract_context",
-    "current_trace_id",
-    "span",
-    "run_span",
-    "workflow_span",
-    "agent_span",
-    "model_span",
-    "mcp_tool_span",
     "a2a_span",
-    "policy_span",
+    "agent_span",
     "approval_wait_span",
+    "current_trace_id",
     "db_span",
+    "extract_context",
+    "get_tracer",
     "http_server_span",
+    "init_tracing",
+    "inject_headers",
+    "is_available",
+    "mcp_tool_span",
+    "model_span",
+    "policy_span",
+    "run_span",
+    "span",
+    "workflow_span",
 ]

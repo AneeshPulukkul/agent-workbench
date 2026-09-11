@@ -21,7 +21,7 @@ Conventions:
 
 from __future__ import annotations
 
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 from sqlalchemy import (
     JSON,
@@ -38,7 +38,7 @@ from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
 
 
 def utcnow() -> datetime:
-    return datetime.now(timezone.utc)
+    return datetime.now(UTC)
 
 
 class Base(DeclarativeBase):
@@ -81,9 +81,7 @@ class Run(Base):
 
 class RunEvent(Base):
     __tablename__ = "run_events"
-    __table_args__ = (
-        UniqueConstraint("run_id", "sequence", name="uq_run_events_run_sequence"),
-    )
+    __table_args__ = (UniqueConstraint("run_id", "sequence", name="uq_run_events_run_sequence"),)
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
     event_id: Mapped[str] = mapped_column(String(128), nullable=False, unique=True, index=True)
@@ -140,9 +138,7 @@ class ToolInvocationRow(Base):
     __tablename__ = "tool_invocations"
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
-    invocation_id: Mapped[str] = mapped_column(
-        String(128), nullable=False, unique=True, index=True
-    )
+    invocation_id: Mapped[str] = mapped_column(String(128), nullable=False, unique=True, index=True)
     run_id: Mapped[str] = mapped_column(
         String(128), ForeignKey("runs.id", ondelete="CASCADE"), nullable=False, index=True
     )
@@ -172,9 +168,7 @@ class ApprovalRow(Base):
     __tablename__ = "approvals"
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
-    approval_id: Mapped[str] = mapped_column(
-        String(128), nullable=False, unique=True, index=True
-    )
+    approval_id: Mapped[str] = mapped_column(String(128), nullable=False, unique=True, index=True)
     run_id: Mapped[str] = mapped_column(
         String(128), ForeignKey("runs.id", ondelete="CASCADE"), nullable=False, index=True
     )
@@ -197,9 +191,7 @@ class FindingRow(Base):
     __tablename__ = "findings"
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
-    finding_id: Mapped[str] = mapped_column(
-        String(128), nullable=False, unique=True, index=True
-    )
+    finding_id: Mapped[str] = mapped_column(String(128), nullable=False, unique=True, index=True)
     run_id: Mapped[str] = mapped_column(
         String(128), ForeignKey("runs.id", ondelete="CASCADE"), nullable=False, index=True
     )
@@ -281,16 +273,16 @@ class AuditRecord(Base):
 
 
 __all__ = [
+    "AgentTask",
+    "ApprovalRow",
+    "AuditRecord",
     "Base",
-    "Tenant",
+    "EvidenceRef",
+    "FindingRow",
+    "ModelCall",
     "Run",
     "RunEvent",
-    "AgentTask",
+    "Tenant",
     "ToolInvocationRow",
-    "ApprovalRow",
-    "FindingRow",
-    "EvidenceRef",
-    "ModelCall",
-    "AuditRecord",
     "utcnow",
 ]

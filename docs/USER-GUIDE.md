@@ -64,6 +64,7 @@ In-process check without a server (FastAPI `TestClient`):
 ```python
 from fastapi.testclient import TestClient
 from apps.api.main import create_app
+
 c = TestClient(create_app())
 assert c.get("/health").json() == {"status": "ok", "service": "agent-api"}
 assert c.get("/ready").json()["checks"]["postgres"] == "mock-ok"

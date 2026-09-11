@@ -103,7 +103,9 @@ async def test_valid_query_metrics():
 async def test_valid_rollback_dry_run_default():
     auth = _auth(scopes=["tools.read", "tools.write.deployment.rollback"])
     out = await execute_tool(
-        "deployment.rollback", {"deployment": "checkout-api"}, auth,
+        "deployment.rollback",
+        {"deployment": "checkout-api"},
+        auth,
     )
     assert out["dry_run"] is True and out["executed"] is False
 
@@ -127,9 +129,7 @@ async def test_invalid_rejected_strict():
         await execute_tool("telemetry.query_metrics", {"service": "x"}, _auth())
     assert e.value.code == "validation_error"
     with pytest.raises(MCPToolError) as e2:
-        await execute_tool(
-            "telemetry.query_metrics", {**_metrics_args(), "bogus": 1}, _auth()
-        )
+        await execute_tool("telemetry.query_metrics", {**_metrics_args(), "bogus": 1}, _auth())
     assert e2.value.code == "validation_error"
 
 
@@ -204,9 +204,7 @@ async def test_timeout_path():
 
 @pytest.mark.asyncio
 async def test_duplicate_keys_dedupe_and_conflict():
-    auth = _auth(
-        scopes=["tools.read", "tools.write.deployment.rollback"], approved=True
-    )
+    auth = _auth(scopes=["tools.read", "tools.write.deployment.rollback"], approved=True)
     args = {"deployment": "checkout-api", "dry_run": False, "idempotency_key": "dup-1"}
     first = await execute_tool("deployment.rollback", args, auth)
     assert first.get("deduplicated") is None
@@ -224,9 +222,7 @@ async def test_duplicate_keys_dedupe_and_conflict():
 
 @pytest.mark.asyncio
 async def test_missing_idempotency_key_rejected_when_not_dry_run():
-    auth = _auth(
-        scopes=["tools.read", "tools.write.deployment.rollback"], approved=True
-    )
+    auth = _auth(scopes=["tools.read", "tools.write.deployment.rollback"], approved=True)
     with pytest.raises(MCPToolError) as e:
         await execute_tool(
             "deployment.rollback", {"deployment": "checkout-api", "dry_run": False}, auth

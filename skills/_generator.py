@@ -128,8 +128,7 @@ def _schema_refs(input_schema: str, outputs: list[str], manifest: dict[str, str]
     lines = [f"- input: `{input_schema}` → {schema_file_for(input_schema, manifest)}"]
     for o in outputs:
         lines.append(f"- output: `{o}` → {schema_file_for(o, manifest)}")
-    lines.append("- error: `ErrorEnvelope@1.0` → "
-                 f"{schema_file_for('ErrorEnvelope@1.0', manifest)}")
+    lines.append(f"- error: `ErrorEnvelope@1.0` → {schema_file_for('ErrorEnvelope@1.0', manifest)}")
     return "\n".join(lines)
 
 
@@ -180,7 +179,7 @@ def render_agents_md(manifest: dict[str, str]) -> str:
 # auth: OIDC bearer; tenant comes from token
 TOKEN="$OIDC_TOKEN"; BASE="${{BASE_URL:-http://localhost:8080}}"
 
-# 1. create (AgentRequest@{SCHEMA_VERSION} → {schema_file_for('AgentRequest@1.0', manifest)})
+# 1. create (AgentRequest@{SCHEMA_VERSION} → {schema_file_for("AgentRequest@1.0", manifest)})
 curl -s -X POST "$BASE/v1/runs" -H "Authorization: Bearer $TOKEN" \\
   -H 'Content-Type: application/json' -H 'Idempotency-Key: inv-001' \\
   -d '{{"objective":"Investigate elevated checkout API error rate",
@@ -216,7 +215,7 @@ Contracts live response: `GET /v1/contracts/{{name}}/{{version}}/schema`
   auto-retry irreversible tools.
 - Idempotency: `Idempotency-Key` header on POST runs/decide + write-tool path.
 - Limits: objective ≤8KB, context ≤64KB. Errors always `ErrorEnvelope`
-  (→ {schema_file_for('ErrorEnvelope@1.0', manifest)}).
+  (→ {schema_file_for("ErrorEnvelope@1.0", manifest)}).
 - cancel: `POST /v1/runs/{{id}}/cancel` → `202 {{status:"cancelled"}}` (idempotent).
 - Trace: send `traceparent`, receive `X-Request-ID`; propagate
   `trace_id`/`correlation_id` on every body.
@@ -299,7 +298,7 @@ curl -s -N "$BASE/v1/runs/<run_id>/events?after_sequence=0" -H "Authorization: B
     if name == "correlate-symptoms":
         return f"""```bash
 {base}
-# A2A task (A2ATaskRequest@{SCHEMA_VERSION} → {schema_file_for('A2ATaskRequest@1.0', manifest)})
+# A2A task (A2ATaskRequest@{SCHEMA_VERSION} → {schema_file_for("A2ATaskRequest@1.0", manifest)})
 curl -s -X POST "$BASE/v1/a2a/tasks" -H "Authorization: Bearer $TOKEN" \\
   -H 'Content-Type: application/json' \\
   -d '{{"task_id":"t-001","tenant_id":"<tenant>","skill_id":"correlate-service-symptoms",
@@ -338,18 +337,18 @@ def render_skill_md(spec: dict[str, object], manifest: dict[str, str]) -> str:
     return f"""---
 name: {name}
 version: {SKILL_VERSION}
-description: {spec['description']}
+description: {spec["description"]}
 contract_version: "{SCHEMA_VERSION}"
 tool_version: {TOOL_VERSION}
 allowed-tools:
 {allowed_tools_yaml}
-input-schema: {spec['input_schema']}
+input-schema: {spec["input_schema"]}
 output-schema: {", ".join(outputs)}
 ---
 
 # Skill: {name} (v{SKILL_VERSION} · contract {SCHEMA_VERSION} · tools {TOOL_VERSION})
 
-> Generated view of versioned contracts. Source: `{spec['prompt_source']}` + catalog.
+> Generated view of versioned contracts. Source: `{spec["prompt_source"]}` + catalog.
 > Pin: skill == contract == tool. Stale `schema_version` → `400 + ErrorEnvelope`
 > (fetch the matching skill-pack release; mixed versions unsupported).
 
@@ -357,10 +356,10 @@ output-schema: {", ".join(outputs)}
 
 ## Schema refs (import from contracts — never hand-copy)
 
-{_schema_refs(str(spec['input_schema']), outputs, manifest)}
+{_schema_refs(str(spec["input_schema"]), outputs, manifest)}
 
 Validate locally: `GET /v1/contracts/<name>/<version>/schema`
-(e.g. `{schema_file_for(str(spec['input_schema']), manifest)}`).
+(e.g. `{schema_file_for(str(spec["input_schema"]), manifest)}`).
 `schema_version` const on every body: `"{SCHEMA_VERSION}"`.
 
 ## Allowed tools (catalog v{TOOL_VERSION})

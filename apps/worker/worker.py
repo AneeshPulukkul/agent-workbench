@@ -7,6 +7,7 @@ test-only deterministic harness and is never used by ``main()`` in prod.
 
 from __future__ import annotations
 
+import contextlib
 import logging
 import os
 import queue
@@ -152,13 +153,13 @@ def run_repository_job(job: RunJob) -> RunState:
         RUN_STATES[job.run_id] = state
     graph = make_prod_graph(job.run_id, job.tenant_id)
     out = graph.run(state)
-    try:
+    with contextlib.suppress(Exception):
         repo.update_run(
-            job.run_id, job.tenant_id, status=str(out.status),
+            job.run_id,
+            job.tenant_id,
+            status=str(out.status),
             current_state=str(out.current_state),
         )
-    except Exception:
-        pass
     return out
 
 

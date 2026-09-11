@@ -63,8 +63,13 @@ try:  # graceful when SDK not installed (REST + executor still work)
     ) -> dict[str, Any]:
         return await execute_tool(
             "telemetry.query_metrics",
-            {"service": service, "metric": metric, "start_time": start_time,
-             "end_time": end_time, "aggregation": aggregation},
+            {
+                "service": service,
+                "metric": metric,
+                "start_time": start_time,
+                "end_time": end_time,
+                "aggregation": aggregation,
+            },
             _req_auth(),
         )
 
@@ -82,15 +87,11 @@ try:  # graceful when SDK not installed (REST + executor still work)
 
     @fastmcp.tool(name="knowledge.search")  # type: ignore[misc]
     async def _t_search(query: str, top_k: int = 5) -> dict[str, Any]:
-        return await execute_tool(
-            "knowledge.search", {"query": query, "top_k": top_k}, _req_auth()
-        )
+        return await execute_tool("knowledge.search", {"query": query, "top_k": top_k}, _req_auth())
 
     @fastmcp.tool(name="knowledge.get_runbook")  # type: ignore[misc]
     async def _t_get_runbook(runbook_id: str) -> dict[str, Any]:
-        return await execute_tool(
-            "knowledge.get_runbook", {"runbook_id": runbook_id}, _req_auth()
-        )
+        return await execute_tool("knowledge.get_runbook", {"runbook_id": runbook_id}, _req_auth())
 
     @fastmcp.tool(name="remediation.simulate")  # type: ignore[misc]
     async def _t_simulate(action: str, target_service: str = "") -> dict[str, Any]:
@@ -191,10 +192,7 @@ def create_app() -> FastAPI:
             _current_auth.set(
                 from_identity(gateway_identity)
                 if gateway_identity is not None
-                and (
-                    request.url.path.startswith("/mcp")
-                    or request.url.path.startswith("/tools/")
-                )
+                and (request.url.path.startswith("/mcp") or request.url.path.startswith("/tools/"))
                 else None
             )
         except AuthError:

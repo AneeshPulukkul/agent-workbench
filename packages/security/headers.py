@@ -43,9 +43,9 @@ class SecurityHeadersMiddleware(BaseHTTPMiddleware):
 
 
 __all__ = [
-    "SECURITY_HEADERS",
     "HSTS_HEADER",
     "HSTS_VALUE",
+    "SECURITY_HEADERS",
     "SecurityHeadersMiddleware",
     "build_headers",
 ]

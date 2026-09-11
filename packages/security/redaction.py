@@ -34,10 +34,10 @@ def safe_for_ui(payload: dict[str, Any]) -> dict[str, Any]:
 
 
 __all__ = [
+    "OUTPUT_MAX_BYTES",
+    "PII_RE",
     "REDACTED",
     "SENSITIVE_KEYS",
-    "PII_RE",
-    "OUTPUT_MAX_BYTES",
     "output_too_large",
     "redact",
     "redact_for_audit",

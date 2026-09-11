@@ -15,7 +15,6 @@ Conventions (all contract modules):
 
 from __future__ import annotations
 
-from datetime import datetime
 from enum import StrEnum
 from typing import Any, Literal
 
@@ -24,11 +23,15 @@ from pydantic import AwareDatetime, BaseModel, ConfigDict, Field, field_validato
 SCHEMA_VERSION: Literal["1.0"] = "1.0"
 
 TenantId = Field(
-    min_length=1, max_length=128, pattern=r"^[A-Za-z0-9._-]+$",
+    min_length=1,
+    max_length=128,
+    pattern=r"^[A-Za-z0-9._-]+$",
     description="Tenant scope. Enforced on every row; mismatch -> deny.",
 )
 RunId = Field(
-    min_length=1, max_length=128, pattern=r"^[A-Za-z0-9._-]+$",
+    min_length=1,
+    max_length=128,
+    pattern=r"^[A-Za-z0-9._-]+$",
     description="Durable run identifier (e.g. run_123).",
 )
 
@@ -183,9 +186,7 @@ class Run(BaseModel):
 
     @field_validator("completed_at")
     @classmethod
-    def _terminal_requires_completed_at(
-        cls, v: AwareDatetime | None, info
-    ) -> AwareDatetime | None:
+    def _terminal_requires_completed_at(cls, v: AwareDatetime | None, info) -> AwareDatetime | None:
         # Light cross-field guidance enforced at orchestrator level; keep soft here.
         return v
 
@@ -260,15 +261,15 @@ class AgentResult(BaseModel):
 
 __all__ = [
     "SCHEMA_VERSION",
-    "RunStatus",
-    "SeverityLevel",
-    "RiskLevel",
+    "AgentRequest",
+    "AgentResult",
     "EvidenceKind",
     "EvidenceReference",
     "Finding",
-    "AgentRequest",
-    "RunBudget",
-    "Run",
     "ProposedAction",
-    "AgentResult",
+    "RiskLevel",
+    "Run",
+    "RunBudget",
+    "RunStatus",
+    "SeverityLevel",
 ]

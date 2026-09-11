@@ -97,9 +97,7 @@ def validate_auth_config() -> None:
         iss = os.getenv("OIDC_ISSUER_URL", "").strip()
         aud = os.getenv("OIDC_AUDIENCE", "").strip()
         missing = [
-            name
-            for name, val in (("OIDC_ISSUER_URL", iss), ("OIDC_AUDIENCE", aud))
-            if not val
+            name for name, val in (("OIDC_ISSUER_URL", iss), ("OIDC_AUDIENCE", aud)) if not val
         ]
         if missing:
             raise RuntimeError(
@@ -141,7 +139,7 @@ def _load_jwks() -> dict[str, object] | None:
     if _JWKS_CACHE is not None:
         return _JWKS_CACHE
     try:
-        with urllib.request.urlopen(url, timeout=5) as resp:  # noqa: S310
+        with urllib.request.urlopen(url, timeout=5) as resp:
             doc = json.loads(resp.read().decode("utf-8"))
     except IdentityError:
         raise

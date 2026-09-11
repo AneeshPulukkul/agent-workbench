@@ -2,12 +2,12 @@
 
 from __future__ import annotations
 
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 from packages.contracts.events import AgentEvent
 from packages.protocols.ag_ui import batch_to_ag_ui, is_renderable, to_ag_ui
 
-NOW = datetime(2026, 9, 11, 12, 0, tzinfo=timezone.utc)
+NOW = datetime(2026, 9, 11, 12, 0, tzinfo=UTC)
 
 
 def _ev(seq: int, type: str, data: dict | None = None, **kw):  # type: ignore[no-untyped-def]

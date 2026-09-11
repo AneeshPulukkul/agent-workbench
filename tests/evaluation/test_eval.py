@@ -120,9 +120,9 @@ def test_dataset_failure_modes_have_expected_metrics() -> None:
     assert "deployment.rollback" in a2a.forbidden_tools
     # Duplicate delivery requires idempotency + approval.
     dup = cases["eval-duplicate-delivery"]
-    assert dup.expected_approval is True and "idempotency" in " ".join(
-        dup.expected_findings
-    ).lower()
+    assert (
+        dup.expected_approval is True and "idempotency" in " ".join(dup.expected_findings).lower()
+    )
     # DB outage is bounded/retryable, never a blind rollback.
     db = cases["eval-db-outage"]
     assert "deployment.rollback" in db.forbidden_tools

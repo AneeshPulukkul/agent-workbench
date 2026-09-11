@@ -21,8 +21,8 @@ Security contract (P0-2 fix):
 from __future__ import annotations
 
 import os
+from collections.abc import Mapping
 from dataclasses import dataclass, field
-from typing import Mapping
 
 try:  # gateway identity type (no hard import cycle at runtime)
     from packages.security.identity import Identity
@@ -61,9 +61,10 @@ def _norm(headers: Mapping[str, str]) -> dict[str, str]:
 
 
 def _mock_mode() -> bool:
-    return os.getenv("AUTH_MODE", "mock") == "mock" and os.getenv(
-        "APP_ENV", "local"
-    ) in ("local", "test")
+    return os.getenv("AUTH_MODE", "mock") == "mock" and os.getenv("APP_ENV", "local") in (
+        "local",
+        "test",
+    )
 
 
 def from_identity(identity: Identity, *, approved: bool = False) -> AuthContext:
@@ -80,9 +81,7 @@ def from_identity(identity: Identity, *, approved: bool = False) -> AuthContext:
     )
 
 
-def from_headers(
-    headers: Mapping[str, str], *, identity: Identity | None = None
-) -> AuthContext:
+def from_headers(headers: Mapping[str, str], *, identity: Identity | None = None) -> AuthContext:
     """Build AuthContext from HTTP headers + (when available) gateway identity.
 
     When ``identity`` is provided, tenant/scopes/user come from it; client
@@ -116,8 +115,9 @@ def from_headers(
 
     # No gateway identity attached: try Bearer -> token identity.
     if authz.startswith("Bearer "):
-        from packages.security.identity import IdentityError, resolve_identity
         from starlette.requests import Request as _Request
+
+        from packages.security.identity import IdentityError, resolve_identity
 
         raw = [(k.encode(), v.encode()) for k, v in h.items()]
         try:
@@ -144,13 +144,10 @@ def from_headers(
         claimed = h.get("x-tenant-id", "").strip()
         if not claimed:
             raise AuthError("missing X-Tenant-ID")
-        if claimed and claimed != mock_ident.tenant_id:
-            # Test harness may target an arbitrary tenant label in mock mode:
-            # allow it, but scopes stay server-defaulted unless X-Scopes given
-            # (local/test only). X-Approved still ignored.
-            tenant = claimed
-        else:
-            tenant = mock_ident.tenant_id
+        # Test harness may target an arbitrary tenant label in mock mode:
+        # allow it, but scopes stay server-defaulted unless X-Scopes given
+        # (local/test only). X-Approved still ignored.
+        tenant = claimed if claimed and claimed != mock_ident.tenant_id else mock_ident.tenant_id
         raw_scopes = h.get("x-scopes", "").strip()
         scopes = (
             [s.strip() for s in raw_scopes.split(",") if s.strip()]
@@ -173,7 +170,7 @@ __all__ = [
     "AuthContext",
     "AuthError",
     "ForbiddenError",
+    "check_tenant",
     "from_headers",
     "from_identity",
-    "check_tenant",
 ]

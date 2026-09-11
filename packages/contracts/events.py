@@ -43,10 +43,10 @@ class AgentEvent(BaseModel):
     safe_for_ui: bool = False
 
     @model_validator(mode="after")
-    def _sensitive_never_ui_safe(self) -> "AgentEvent":
+    def _sensitive_never_ui_safe(self) -> AgentEvent:
         if self.sensitive and self.safe_for_ui:
             raise ValueError("sensitive events must not be marked safe_for_ui")
         return self
 
 
-__all__ = ["SCHEMA_VERSION", "EventType", "AgentEvent"]
+__all__ = ["SCHEMA_VERSION", "AgentEvent", "EventType"]
