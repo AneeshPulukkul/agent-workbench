@@ -6,8 +6,7 @@ No network, no LLM, no sleeps.
 
 from __future__ import annotations
 
-import datetime
-from datetime import UTC
+from datetime import UTC, datetime
 
 import pytest
 
@@ -44,8 +43,6 @@ def _state(run_id: str = "run_t1", **over) -> RunState:
         limits=BudgetLimits(),
         usage=BudgetUsage(),
         started_at=datetime.now(UTC),
-        trace_id="trace-1",
-        correlation_id="corr-1",
         classification={},
         plan=[],
         resources={},

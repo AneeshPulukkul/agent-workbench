@@ -3,10 +3,9 @@ resource authZ, input limits, rate limits, redaction, headers (Prompt 11)."""
 
 from __future__ import annotations
 
-from collections.abc import Generator
-
 import base64
 import json
+from collections.abc import Generator
 
 import pytest
 from fastapi import FastAPI

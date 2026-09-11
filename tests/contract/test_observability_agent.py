@@ -90,9 +90,7 @@ def test_skill_io_versioned() -> None:
     for f in out.findings:
         assert f.evidence_refs and 0.0 <= f.confidence <= 1.0
     with pytest.raises(ValidationError):
-        CorrelateInput(
-            service="checkout-api", window=_window()
-        )
+        CorrelateInput(service="checkout-api", window=_window())
     with pytest.raises(ValidationError):
         CorrelateOutput(findings="not-a-list")  # type: ignore[arg-type]
 
