@@ -74,7 +74,7 @@ def init_tracing(
     exporter = None
     if in_memory:
         try:
-            from opentelemetry.sdk.trace.export import (
+            from opentelemetry.sdk.trace.export import (  # type: ignore[attr-defined]
                 InMemorySpanExporter,  # type: ignore[no-redef]
             )
         except ImportError:

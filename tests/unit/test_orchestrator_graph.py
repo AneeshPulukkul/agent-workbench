@@ -7,6 +7,7 @@ No network, no LLM, no sleeps.
 from __future__ import annotations
 
 from datetime import UTC, datetime
+from typing import Any
 
 import pytest
 
@@ -30,7 +31,7 @@ from apps.worker.worker import InMemoryRunQueue, RunJob
 def _state(run_id: str = "run_t1", **over) -> RunState:
     from apps.orchestrator.state import BudgetLimits, BudgetUsage
 
-    base = dict(
+    base: dict[str, Any] = dict(
         run_id=run_id,
         tenant_id="tenant_a",
         objective="Investigate elevated checkout API error rate",
