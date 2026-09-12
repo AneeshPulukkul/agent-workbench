@@ -13,9 +13,14 @@ jobs:
   analysis:
     runs-on: ubuntu-latest
     permissions:
+      # Required when publishing results (badge / API / code scanning)
       security-events: write
+      id-token: write
+      # Recommended reads for private repos to avoid GraphQL/SAST gaps
       contents: read
-      actions: read
+      issues: read
+      pull-requests: read
+      checks: read
     steps:
       - uses: actions/checkout@v4
         with:
