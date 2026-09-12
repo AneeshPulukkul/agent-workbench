@@ -13,15 +13,14 @@ jobs:
   analysis:
     runs-on: ubuntu-latest
     permissions:
-      # Required when publishing results (badge / API / code scanning)
-      security-events: write
+      # Required when publishing results (badge / API)
       id-token: write
       # Recommended reads for private repos to avoid GraphQL/SAST gaps
       contents: read
       issues: read
       pull-requests: read
       checks: read
-      # Required by github/codeql-action/upload-sarif to fetch the workflow run
+      # Required by actions/upload-artifact to store the results
       actions: read
     steps:
       - uses: actions/checkout@v4
@@ -33,7 +32,8 @@ jobs:
           results_file: results.sarif
           results_format: sarif
           publish_results: true
-      - name: Upload SARIF
-        uses: github/codeql-action/upload-sarif@v3
+      - name: Upload Scorecard results
+        uses: actions/upload-artifact@v4
         with:
-          sarif_file: results.sarif
+          name: scorecard-sarif
+          path: results.sarif
