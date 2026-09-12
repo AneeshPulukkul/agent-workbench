@@ -29,7 +29,7 @@ from apps.a2a_agents.observability.agent import (
 from packages.contracts import AgentCard
 
 client = TestClient(app)
-NOW = datetime(2026, 9, 11, 12, 0, tzinfo=UTC)
+NOW = datetime.now(UTC)
 
 
 def _window():
@@ -51,7 +51,7 @@ def _req(task_id: str, **over):
         "objective": "Correlate symptoms for checkout-api",
         "inputs": {
             "service": "checkout-api",
-            "window": _window(),
+            "window": _window().model_dump(mode="json"),
             "metrics_refs": ["telemetry://m/checkout-api/err"],
             "logs_refs": ["telemetry://l/checkout-api/err"],
             "deploy_state": "release 2026.09.10 deployed",
@@ -90,7 +90,7 @@ def test_skill_io_versioned() -> None:
     for f in out.findings:
         assert f.evidence_refs and 0.0 <= f.confidence <= 1.0
     with pytest.raises(ValidationError):
-        CorrelateInput(service="checkout-api", window=_window())
+        CorrelateInput(service="", window=_window())
     with pytest.raises(ValidationError):
         CorrelateOutput(findings="not-a-list")  # type: ignore[arg-type]
 
